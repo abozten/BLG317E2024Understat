@@ -1,6 +1,0 @@
-autoincrement ;match_id    ;isResult ;datetime            ;h_id ;h_title             ;h_short_title ;a_id ;a_title             ;a_short_title ;goals_h ;goals_a ;xG_h      ;xG_a        ;forecast_w ;forecast_d ;forecast_l
-            0 ; 5826 ;True     ;2014-08-23 18:00:00 ; 137 ;Malaga              ;MAL           ; 147 ;Athletic Club       ;ATH           ;      1 ;      0 ;1.32107   ;  1.14151   ;    0.3996 ;    0.3315 ;    0.2689
-            1 ; 5827 ;True     ;2014-08-23 20:00:00 ; 138 ;Sevilla             ;SEV           ; 146 ;Valencia            ;VAL           ;      1 ;      1 ;1.17197   ;  1.74903   ;    0.1984 ;    0.2906 ;  511
-            2 ; 5828 ;True     ;2014-08-23 20:00:00 ; 155 ;Granada             ;GRA           ; 139 ;Deportivo La Coruna ;DEP           ;      2 ;      1 ;0.548351  ;  0.379371  ;    0.3244 ;    0.4747 ;    0.2009
-            3 ; 5829 ;True     ;2014-08-23 22:00:00 ; 208 ;Almeria             ;ALM           ; 141 ;Espanyol            ;ESP           ;      1 ;      1 ;0.978788  ;  0.399306  ;    0.51   ;    0.3494 ;    0.1406
-            4 ; 5830 ;True     ;2014-08-24 18:00:00 ; 156 ;Eibar               ;EIB           ; 140 ;Real Sociedad       ;SOC           ;      1 ;      0 ;0.465398  ;  0.975523  ;  158      ;    0.3601 ;    0.4819
