@@ -3,7 +3,7 @@ import pymysql #mDB-API 2.0 compatible driver
 
 # Database connection parameters
 user = 'root'
-password = 'blg317e2024'
+password = 'blg317e2024'    #DONT
 host = 'localhost'
 port = 3306
 database = 'Understat'
