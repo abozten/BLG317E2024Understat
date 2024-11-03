@@ -9,7 +9,7 @@ port = 3306
 database = 'Understat'
 
 # Read the CSV file using pandas
-df = pd.read_csv('MATCH_DATA.CSV', sep=';')
+df = pd.read_csv('MATCH_DATA_processed.csv', sep=';')
 
 # Establish a database connection
 connection = pymysql.connect(
