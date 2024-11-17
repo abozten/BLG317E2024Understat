@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, jsonify, request
 import pymysql
 from pymysql.cursors import DictCursor
 
@@ -11,35 +11,47 @@ db_config = {
     'password': 'blg317e2024',
     'database': 'Understat',
     'port': 3306,
-    'cursorclass': DictCursor #Easier to work with dictionaries than tuples
+    'cursorclass': DictCursor
 }
 
 def get_db_connection():
     return pymysql.connect(**db_config)
 
-@app.route('/matches', methods=['POST'])
-def create_match():
-    data = request.json
-    keys = ', '.join(data.keys())
-    values = ', '.join(['%s'] * len(data))
-    sql = f"INSERT INTO matches ({keys}) VALUES ({values})"
+@app.route('/')
+def home():
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute(sql, tuple(data.values()))
-        connection.commit()
-        return jsonify({'message': 'Match created'}), 201
+            # Fetch matches
+            cursor.execute("""
+                SELECT * FROM matches 
+                ORDER BY date DESC 
+                LIMIT 20
+            """)
+            matches = cursor.fetchall()
+            
+            # Fetch top players stats (assuming you have a players table)
+            cursor.execute("""
+                SELECT * FROM players 
+                ORDER BY goals DESC 
+                LIMIT 20
+            """)
+            players = cursor.fetchall()
+            
+        return render_template('index.html', 
+                             matches=matches,
+                             players=players)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
 
-@app.route('/matches', methods=['GET'])
+@app.route('/api/matches')
 def get_matches():
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM matches") #Limit match fetching
+            cursor.execute("SELECT * FROM matches ORDER BY date DESC")
             results = cursor.fetchall()
         return jsonify(results), 200
     except Exception as e:
@@ -47,7 +59,7 @@ def get_matches():
     finally:
         connection.close()
 
-@app.route('/matches/<int:match_id>', methods=['GET'])
+@app.route('/api/match/<int:match_id>')
 def get_match(match_id):
     try:
         connection = get_db_connection()
@@ -56,37 +68,49 @@ def get_match(match_id):
             result = cursor.fetchone()
         if result:
             return jsonify(result), 200
-        else:
-            return jsonify({'message': 'Match not found'}), 404
+        return jsonify({'message': 'Match not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
 
-@app.route('/matches/<int:match_id>', methods=['PUT'])
-def update_match(match_id):
-    data = request.json
-    set_clause = ', '.join([f"{key}=%s" for key in data.keys()])
-    sql = f"UPDATE matches SET {set_clause} WHERE match_id=%s"
+@app.route('/api/team/<team_name>')
+def get_team_stats(team_name):
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute(sql, tuple(data.values()) + (match_id,))
-        connection.commit()
-        return jsonify({'message': 'Match updated'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    finally:
-        connection.close()
-
-@app.route('/matches/<int:match_id>', methods=['DELETE'])
-def delete_match(match_id):
-    try:
-        connection = get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute("DELETE FROM matches WHERE match_id=%s", (match_id,))
-        connection.commit()
-        return jsonify({'message': 'Match deleted'}), 200
+            # Get team's home matches
+            cursor.execute("""
+                SELECT * FROM matches 
+                WHERE home_team = %s OR away_team = %s
+                ORDER BY date DESC
+            """, (team_name, team_name))
+            matches = cursor.fetchall()
+            
+            # Calculate team statistics
+            stats = {
+                'name': team_name,
+                'matches_played': len(matches),
+                'goals_scored': 0,
+                'goals_conceded': 0,
+                'xG_for': 0,
+                'xG_against': 0,
+                'matches': matches
+            }
+            
+            for match in matches:
+                if match['home_team'] == team_name:
+                    stats['goals_scored'] += match['home_goals']
+                    stats['goals_conceded'] += match['away_goals']
+                    stats['xG_for'] += match['home_xG']
+                    stats['xG_against'] += match['away_xG']
+                else:
+                    stats['goals_scored'] += match['away_goals']
+                    stats['goals_conceded'] += match['home_goals']
+                    stats['xG_for'] += match['away_xG']
+                    stats['xG_against'] += match['home_xG']
+            
+        return jsonify(stats), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
