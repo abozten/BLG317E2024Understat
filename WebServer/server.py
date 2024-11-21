@@ -6,7 +6,7 @@ app = Flask(__name__)
 API_URL = "http://127.0.0.1:5001"  # URL of the API server
 
 @app.route('/')
-def home():
+def index():  
     try:
         # Send GET requests to the API
         players_response = requests.get(f"{API_URL}/players")
@@ -47,6 +47,19 @@ def home():
                                match_info=match_info,
                                season_stats=season_stats,
                                shot_data=shot_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/team/<team_name>')
+def team(team_name):
+    try:
+        # Get team-specific data from API
+        team_response = requests.get(f"{API_URL}/team/{team_name}")
+        if team_response.status_code == 200:
+            team_data = team_response.json()
+        else:
+            team_data = {}
+        return render_template('team.html', team=team_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 

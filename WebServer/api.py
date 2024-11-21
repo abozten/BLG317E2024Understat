@@ -50,55 +50,66 @@ def get_matches():
     finally:
         connection.close()
 
-@app.route('/match_info', methods=['GET'])
-def get_match_info():
+@app.route('/team/<team_name>', methods=['GET'])
+def get_team(team_name):
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT * FROM match_info
-                ORDER BY date DESC
-                LIMIT 20
-            """)
-            match_info = cursor.fetchall()
-        return jsonify(match_info)
+                SELECT * FROM matches 
+                WHERE h_title = %s OR a_title = %s
+                ORDER BY datetime DESC
+                LIMIT 10
+            """, (team_name, team_name))
+            team_matches = cursor.fetchall()
+        return jsonify(team_matches)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
 
-@app.route('/season', methods=['GET'])
-def get_season_stats():
+@app.route('/team/<team_name>/squad', methods=['GET'])
+def get_team_squad(team_name):
+    connection = None
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT * FROM season
-                LIMIT 20
-            """)
-            season_stats = cursor.fetchall()
-        return jsonify(season_stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    finally:
-        connection.close()
+                SELECT DISTINCT
+                    p.player_name as name,
+                    f.Position as position,
+                    f.Rating as rating,
+                    p.games,
+                    p.goals,
+                    p.assists
+                FROM players p
+                JOIN fut23 f ON p.player_name = f.Name
+                WHERE p.team_title = %s
+                    AND p.year = (SELECT MAX(year) FROM players)
+                ORDER BY f.Rating DESC
+            """, (team_name,))
+            
+            columns = [desc[0] for desc in cursor.description]
+            squad = cursor.fetchall()
+            
+            players = [dict(zip(columns, player)) for player in squad]
+            
+            response = jsonify({
+                'team': team_name,
+                'squad_size': len(players),
+                'players': players
+            })
+            response.headers.add('Content-Type', 'application/json')
+            return response
 
-@app.route('/shots', methods=['GET'])
-def get_shot_data():
-    try:
-        connection = get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM shot_data
-                ORDER BY date DESC
-                LIMIT 20
-            """)
-            shot_data = cursor.fetchall()
-        return jsonify(shot_data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({
+            'error': f"Failed to fetch squad data: {str(e)}"
+        }), 500
+        
     finally:
-        connection.close()
+        if connection:
+            connection.close()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Run this API server on port 5001
