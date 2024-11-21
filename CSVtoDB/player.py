@@ -9,7 +9,7 @@ port = 3306
 database = 'Understat'
 
 # Read the CSV file using pandas
-df = pd.read_csv('player_processed.csv', sep=',')
+df = pd.read_csv('Dataset/player.csv', sep=',')
 
 # Establish a database connection
 connection = pymysql.connect(
@@ -21,7 +21,7 @@ connection = pymysql.connect(
 )
 
 cursor = connection.cursor()
-# Create table if it doesn't exist FIXME: FK missing
+# Create table if it doesn't exist 
 create_table_query = """
 CREATE TABLE IF NOT EXISTS players (
     season_player_id INT AUTO_INCREMENT PRIMARY KEY,

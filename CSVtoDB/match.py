@@ -1,15 +1,15 @@
 import pandas as pd
 import pymysql #mDB-API 2.0 compatible driver
 
-# Database connection parameters
+# Database connection parameters.Use .env file to store these parameters.
 user = 'root'
-password = 'blg317e2024'    #DONT
+password = 'blg317e2024'    
 host = 'localhost'
 port = 3306
 database = 'Understat'
 
 # Read the CSV file using pandas
-df = pd.read_csv('MATCH_DATA_processed.csv', sep=';')
+df = pd.read_csv('Dataset/match_data.csv', sep=',')
 
 # Establish a database connection
 connection = pymysql.connect(
@@ -22,7 +22,7 @@ connection = pymysql.connect(
 
 cursor = connection.cursor()
 
-# Create table if it doesn't exist FIXME: Foreign keys missing
+# Create table if it doesn't exist 
 create_table_query = """
 CREATE TABLE IF NOT EXISTS matches (
     match_id INT PRIMARY KEY,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS matches (
     forecast_w FLOAT,
     forecast_d FLOAT,
     forecast_l FLOAT
-)
+    )
 """
 #Probabilities in dataset need fixing
 
