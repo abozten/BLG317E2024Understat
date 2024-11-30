@@ -26,7 +26,7 @@ cursor = connection.cursor()
 # Create teams table if it doesn't exist
 create_fut23_table_query = """
 CREATE TABLE IF NOT EXISTS teams (
-    team_name VARCHAR(255),
+    team_name VARCHAR(255) UNIQUE,
     team_id INT,
     PRIMARY KEY (team_id)
     )

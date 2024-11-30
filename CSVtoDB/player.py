@@ -25,8 +25,8 @@ cursor = connection.cursor()
 create_table_query = """
 CREATE TABLE IF NOT EXISTS players (
     season_player_id INT AUTO_INCREMENT PRIMARY KEY,
-    player_id INT,
-    player_name VARCHAR(255),
+    player_id INT UNIQUE,
+    player_name VARCHAR(255) UNIQUE,
     games INT,
     time INT,
     goals INT,

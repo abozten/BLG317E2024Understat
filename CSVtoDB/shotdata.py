@@ -1,15 +1,25 @@
 import pandas as pd
-import pymysql #mDB-API 2.0 compatible driver
+import pymysql
 
 # Database connection parameters
 user = 'root'
-password = 'blg317e2024'    #DONT
+password = 'blg317e2024'  # Use environment variables for security
 host = 'localhost'
 port = 3306
 database = 'Understat'
 
-# Read the CSV file using pandas
-df = pd.read_csv('shot_data.csv', sep=';')
+# Read the CSV file
+df = pd.read_csv('Dataset/shot_data.csv', sep=',')
+
+# Handle NaN values by replacing them with None
+df = df.where(pd.notnull(df), None)
+
+# Convert data types to match MySQL schema
+df['shot_id'] = df['shot_id'].astype('Int64')  # Nullable integer
+df['minute'] = df['minute'].astype('Int64')
+df['h_goals'] = df['h_goals'].astype('Int64')
+df['a_goals'] = df['a_goals'].astype('Int64')
+df['date'] = pd.to_datetime(df['date'])  # Ensure date format
 
 # Establish a database connection
 connection = pymysql.connect(
@@ -22,8 +32,8 @@ connection = pymysql.connect(
 
 cursor = connection.cursor()
 
-# Create table if it doesn't exist FIXME: Foreign keys missing
-create_table_query = """
+# Create the `shots` table if it does not exist
+create_shots_table_query = """
 CREATE TABLE IF NOT EXISTS shots (
     shot_id INT PRIMARY KEY,
     minute INT,
@@ -49,20 +59,65 @@ CREATE TABLE IF NOT EXISTS shots (
     FOREIGN KEY (player_id) REFERENCES players(player_id)
 )
 """
-#Probabilities in dataset need fixing
+cursor.execute(create_shots_table_query)
 
-cursor.execute(create_table_query)
-
-insert_query = """
-INSERT INTO shots (shot_id, minute, result, X, Y, xG, player, h_a, player_id, situation, season, shotType, match_id, h_team, a_team, h_goals, a_goals, date, player_assisted, lastAction)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+# Create a temporary staging table
+staging_table_query = """
+CREATE TEMPORARY TABLE staging_shots (
+    shot_id INT,
+    minute INT,
+    result VARCHAR(255),
+    X FLOAT,
+    Y FLOAT,
+    xG FLOAT,
+    player VARCHAR(255),
+    h_a CHAR(1),
+    player_id INT,
+    situation VARCHAR(255),
+    season INT,
+    shotType VARCHAR(255),
+    match_id INT,
+    h_team VARCHAR(255),
+    a_team VARCHAR(255),
+    h_goals INT,
+    a_goals INT,
+    date DATETIME,
+    player_assisted VARCHAR(255),
+    lastAction VARCHAR(255)
+)
 """
+cursor.execute(staging_table_query)
 
-# Insert each row
-for _, row in df.iterrows():
-    cursor.execute(insert_query, tuple(row))
+# Insert DataFrame into staging table
+staging_insert_query = """
+INSERT INTO staging_shots (
+    shot_id, minute, result, X, Y, xG, player, h_a, player_id, situation,
+    season, shotType, match_id, h_team, a_team, h_goals, a_goals, date,
+    player_assisted, lastAction
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
+data_to_insert = [tuple(row) for row in df.itertuples(index=False)]
+cursor.executemany(staging_insert_query, data_to_insert)
 
-# Commit the transaction and close the connection
+# Insert valid rows from staging table to shots table
+insert_valid_rows_query = """
+INSERT INTO shots (
+    shot_id, minute, result, X, Y, xG, player, h_a, player_id, situation,
+    season, shotType, match_id, h_team, a_team, h_goals, a_goals, date,
+    player_assisted, lastAction
+)
+SELECT 
+    shot_id, minute, result, X, Y, xG, player, h_a, player_id, situation,
+    season, shotType, match_id, h_team, a_team, h_goals, a_goals, date,
+    player_assisted, lastAction
+FROM staging_shots
+WHERE 
+    match_id IN (SELECT match_id FROM matches)
+    AND player_id IN (SELECT player_id FROM players);
+"""
+cursor.execute(insert_valid_rows_query)
+
+# Commit and close
 connection.commit()
 cursor.close()
 connection.close()
