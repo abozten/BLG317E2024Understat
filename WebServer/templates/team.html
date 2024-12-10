@@ -49,28 +49,31 @@
                 if (!response.ok) throw new Error(data.error);
                 
                 const tableHTML = `
-                    <table class="table table-hover table-striped">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Number</th>
-                                <th>Age</th>
-                                <th>Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.players.map(player => `
-                                <tr>
-                                    <td>${player.name}</td>
-                                    <td>${player.position}</td>
-                                    <td>${player.number}</td>
-                                    <td>${player.age}</td>
-                                    <td>${player.rating}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                    <!-- In templates/team.html -->
+<table class="table table-hover table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Rating</th>
+            <th>Games</th>
+            <th>Goals</th>
+            <th>Assists</th>
+        </tr>
+    </thead>
+    <tbody>
+        ${data.players.map(player => `
+            <tr>
+                <td>${player.name}</td>
+                <td>${player.position}</td>
+                <td>${player.rating}</td>
+                <td>${player.games}</td>
+                <td>${player.goals}</td>
+                <td>${player.assists}</td>
+            </tr>
+        `).join('')}
+    </tbody>
+</table>
                 `;
                 
                 document.getElementById('squadTable').innerHTML = tableHTML;

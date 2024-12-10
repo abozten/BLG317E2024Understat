@@ -17,6 +17,82 @@ db_config = {
 def get_db_connection():
     return pymysql.connect(**db_config)
 
+@app.route('/seasons', methods=['GET'])    #Deniz'den aldım.
+def get_seasons():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT seasonentryid, team_id, title, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts
+                FROM season
+                LIMIT 20
+            """)
+            seasons = cursor.fetchall()
+        return jsonify(seasons)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/season/<team_name>', methods=['GET']) #Deniz'den aldım.
+def get_season_team_performance(team_name):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT seasonentryid, title, year, xG, xGA, scored, missed, pts, result, date
+                FROM season
+                WHERE title = %s
+                ORDER BY date DESC
+                LIMIT 10
+            """, (team_name,))
+            team_performance = cursor.fetchall()
+        return jsonify(team_performance)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/fut23', methods=['GET']) #Deniz'den aldım.
+def get_fut23_players():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT Name, Team, Country, League, Rating, Position, Price, Skill, Weak_foot, Pace, Shoot, Pass, Drible, Defense, Physical
+                FROM fut23
+                LIMIT 20
+            """)
+            players = cursor.fetchall()
+        return jsonify(players)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/fut23/<team_name>', methods=['GET']) #Deniz'den aldım.
+def get_team_fut23_players(team_name):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT Name, Rating, Position, Pace, Shoot, Pass, Drible, Defense, Physical
+                FROM fut23
+                WHERE Team = %s
+                ORDER BY Rating DESC
+                LIMIT 10
+            """, (team_name,))
+            team_players = cursor.fetchall()
+        return jsonify({
+            'team': team_name,
+            'squad_size': len(team_players),
+            'players': team_players
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+        
 @app.route('/players', methods=['GET'])
 def get_players():
     try:
@@ -50,7 +126,7 @@ def get_matches():
     finally:
         connection.close()
 
-@app.route('/team/<team_name>', methods=['GET'])
+@app.route('/team/<team_name>', methods=['GET']) 
 def get_team(team_name):
     try:
         connection = get_db_connection()
@@ -68,16 +144,16 @@ def get_team(team_name):
     finally:
         connection.close()
 
+
 @app.route('/team/<team_name>/squad', methods=['GET'])
 def get_team_squad(team_name):
-    connection = None
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT DISTINCT
                     p.player_name as name,
-                    f.Position as position,
+                    f.Position as position, 
                     f.Rating as rating,
                     p.games,
                     p.goals,
@@ -99,17 +175,12 @@ def get_team_squad(team_name):
                 'squad_size': len(players),
                 'players': players
             })
-            response.headers.add('Content-Type', 'application/json')
+            response.headers['Content-Type'] = 'application/json'
             return response
-
     except Exception as e:
-        return jsonify({
-            'error': f"Failed to fetch squad data: {str(e)}"
-        }), 500
-        
+        return jsonify({'error': str(e)}), 500
     finally:
         if connection:
             connection.close()
-
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Run this API server on port 5001

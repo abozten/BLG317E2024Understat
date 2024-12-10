@@ -41,27 +41,34 @@ def index():
         else:
             shot_data = []
 
-        return render_template('index.html', 
-                               players=players,
-                               matches=matches,
-                               match_info=match_info,
-                               season_stats=season_stats,
-                               shot_data=shot_data)
+        # Render template with all data
+        return render_template('index.html',
+                            players=players,
+                            matches=matches, 
+                            match_info=match_info,
+                            season_stats=season_stats,
+                            shot_data=shot_data)
+
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+# In server.py
 
 @app.route('/team/<team_name>')
 def team(team_name):
     try:
-        # Get team-specific data from API
+        # Get team matches
         team_response = requests.get(f"{API_URL}/team/{team_name}")
-        if team_response.status_code == 200:
-            team_data = team_response.json()
-        else:
-            team_data = {}
-        return render_template('team.html', team=team_data)
+        team_data = team_response.json() if team_response.status_code == 200 else {}
+        
+        # Get team squad 
+        squad_response = requests.get(f"{API_URL}/team/{team_name}/squad")
+        squad_data = squad_response.json() if squad_response.status_code == 200 else {}
+        
+        return render_template('team.html', 
+                             team=team_data,
+                             squad=squad_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
-
 if __name__ == '__main__':
     app.run(debug=True)  # This runs the client-side server on port 5000
