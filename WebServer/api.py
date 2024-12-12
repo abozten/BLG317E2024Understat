@@ -1,8 +1,10 @@
 from flask import Flask, jsonify, request
 import pymysql
 from pymysql.cursors import DictCursor
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Add this line after creating the Flask app
 
 # Database connection parameters
 db_config = {
@@ -100,7 +102,8 @@ def get_team_fut23_players(team_name):
 
 
 #ARDA
-  #Read      
+    #Players
+  #Read       
 @app.route('/players', methods=['GET'])
 def get_players():
     try:
@@ -189,7 +192,9 @@ def get_players():
                 return jsonify({'error': str(e)}), 400
             finally:
                 connection.close()
-        
+
+        #matches
+    
 @app.route('/matches', methods=['GET'])
 def get_matches():
     try:
@@ -261,6 +266,7 @@ def delete_match(id):
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
+    #teams
 
 @app.route('/team/<team_name>', methods=['GET']) 
 def get_team(team_name):
@@ -315,7 +321,6 @@ def get_team_squad(team_name):
             connection.close()
 
 
-from flask import request
 
 # Create team
 @app.route('/team', methods=['POST'])
