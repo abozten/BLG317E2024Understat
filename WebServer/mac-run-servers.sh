@@ -22,9 +22,13 @@ source venv/bin/activate
 # Install required packages
 $PYTHON_CMD -m pip install flask pymysql requests
 
-# Open two terminal windows and run the server and api
+# Open two terminal windows and run the servers
 osascript <<EOF
 tell application "Terminal"
     do script "cd \"$(pwd)\" && source venv/bin/activate && $PYTHON_CMD api.py"
+end tell
+
+tell application "Terminal"
+    do script "cd \"$(pwd)/understat-app\" && npm run dev"
 end tell
 EOF

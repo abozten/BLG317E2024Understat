@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
+import TopBar from './components/TopBar';
 
 export default function Page() {
   const LATEST_AVAILABLE_DATE = new Date('2024-05-26T23:59:00');
@@ -85,6 +86,8 @@ export default function Page() {
   }
 
   return (
+    <div>
+    <TopBar />
     <div className={styles.container}>
       <nav className={styles.nav}>
         <div className={styles.breadcrumb}>
@@ -127,5 +130,7 @@ export default function Page() {
         ))
       )}
     </div>
+    </div>
+
   );
 }
