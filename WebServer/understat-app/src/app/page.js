@@ -4,24 +4,28 @@ import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
 export default function Page() {
-  const [timeZoneEnabled, setTimeZoneEnabled] = useState(true);
+  const LATEST_AVAILABLE_DATE = new Date('2024-05-26T23:59:00');
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentWeek, setCurrentWeek] = useState(LATEST_AVAILABLE_DATE);
 
   useEffect(() => {
     fetchMatches();
-  }, []);
+  }, [currentWeek]);
 
   const fetchMatches = async () => {
     try {
-      const response = await fetch('http://localhost:5001/matches');
+      const endOfWeek = new Date(currentWeek);
+      const startOfWeek = new Date(currentWeek);
+      startOfWeek.setDate(endOfWeek.getDate() - 6);
+
+      const response = await fetch(`http://localhost:5001/matchesdate?start=${startOfWeek.toISOString()}&end=${endOfWeek.toISOString()}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch matches');
       }
       const data = await response.json();
-      
-      // Group matches by date
       const groupedMatches = groupMatchesByDate(data);
       setMatches(groupedMatches);
       setLoading(false);
@@ -53,6 +57,25 @@ export default function Page() {
     }));
   };
 
+  const formatTime = (datetime) => {
+    const date = new Date(datetime);
+    return date.toUTCString().slice(17, 22);
+  };
+
+  const handlePrevWeek = () => {
+    const prevWeek = new Date(currentWeek);
+    prevWeek.setDate(prevWeek.getDate() - 7);
+    setCurrentWeek(prevWeek);
+  };
+
+  const handleNextWeek = () => {
+    const nextWeek = new Date(currentWeek);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    if (nextWeek <= LATEST_AVAILABLE_DATE) {
+      setCurrentWeek(nextWeek);
+    }
+  };
+
   if (loading) {
     return <div className={styles.loading}>Loading matches...</div>;
   }
@@ -67,55 +90,42 @@ export default function Page() {
         <div className={styles.breadcrumb}>
           Home / La liga
         </div>
-        <div className={styles.timezone}>
-          Set time zone
-          <button 
-            className={`${styles.toggleBtn} ${timeZoneEnabled ? styles.active : ''}`}
-            onClick={() => setTimeZoneEnabled(true)}
-          >
-            On
-          </button>
-          <button 
-            className={`${styles.toggleBtn} ${!timeZoneEnabled ? styles.active : ''}`}
-            onClick={() => setTimeZoneEnabled(false)}
-          >
-            Off
-          </button>
-        </div>
       </nav>
 
       <div className={styles.weekNav}>
-        <button className={styles.weekBtn}>prev week</button>
-        <button className={styles.weekBtn}>next week</button>
+        <button className={styles.weekBtn} onClick={handlePrevWeek}>Previous Week</button>
+        <button className={styles.weekBtn} onClick={handleNextWeek}>Next Week</button>
       </div>
 
-      {matches.map((matchDay, index) => (
-        <div key={index} className={styles.matchDay}>
-          <h2 className={styles.date}>{matchDay.date}</h2>
-          {matchDay.games.map((game, gameIndex) => (
-            <div key={gameIndex} className={styles.match}>
-              <div className={styles.team}>{game.team1}</div>
-              <div className={styles.scoreContainer}>
-                {game.score1 !== null && game.score2 !== null ? (
-                  <div className={styles.score}>
-                    <span>{game.score1}</span>
-                    <span>{game.score2}</span>
-                  </div>
-                ) : (
-                  <div className={styles.time}>
-                    {new Date(game.datetime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: false
-                    })}
-                  </div>
-                )}
-              </div>
-              <div className={styles.team}>{game.team2}</div>
-            </div>
-          ))}
+      {matches.length === 0 ? (
+        <div className={styles.noMatches}>
+          No matches were played during this week
         </div>
-      ))}
+      ) : (
+        matches.map((matchDay, index) => (
+          <div key={index} className={styles.matchDay}>
+            <h2 className={styles.date}>{matchDay.date}</h2>
+            {matchDay.games.map((game, gameIndex) => (
+              <div key={gameIndex} className={styles.match}>
+                <div className={styles.team}>{game.h_title}</div>
+                <div className={styles.scoreContainer}>
+                  {game.isResult ? (
+                    <div className={styles.score}>
+                      <span>{game.goals_h}</span>
+                      <span>{game.goals_a}</span>
+                    </div>
+                  ) : (
+                    <div className={styles.time}>
+                      {formatTime(game.datetime)}
+                    </div>
+                  )}
+                </div>
+                <div className={styles.team}>{game.a_title}</div>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
     </div>
   );
 }

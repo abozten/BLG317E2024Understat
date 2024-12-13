@@ -212,6 +212,25 @@ def get_matches():
     finally:
         connection.close()
 
+@app.route('/matchesdate', methods=['GET'])
+def get_matches_by_date():
+    try:
+        start_date = request.args.get('start')
+        end_date = request.args.get('end')
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM matches 
+                WHERE datetime BETWEEN %s AND %s
+                ORDER BY datetime DESC
+            """, (start_date, end_date))
+            matches = cursor.fetchall()
+        return jsonify(matches)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
 @app.route('/matches', methods=['POST'])
 def create_match():
     try:

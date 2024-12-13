@@ -26,6 +26,5 @@ $PYTHON_CMD -m pip install flask pymysql requests
 osascript <<EOF
 tell application "Terminal"
     do script "cd \"$(pwd)\" && source venv/bin/activate && $PYTHON_CMD api.py"
-    do script "cd \"$(pwd)\" && source venv/bin/activate && $PYTHON_CMD server.py"
 end tell
 EOF
