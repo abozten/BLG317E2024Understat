@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import styles from './page.module.css';
 import TopBar from './components/TopBar';
 
@@ -110,11 +111,15 @@ export default function Page() {
             <h2 className={styles.date}>{matchDay.date}</h2>
             {matchDay.games.map((game, gameIndex) => (
               <div key={gameIndex} className={styles.match}>
-                <div className={styles.team}>{game.h_title}</div>
+                <div className={styles.team}>
+                  <Link href={`/teams/${game.h_title}`}>
+                    {game.h_title}
+                  </Link>
+                </div>
                 <div className={styles.scoreContainer}>
                   {game.isResult ? (
                     <div className={styles.score}>
-                      <span>{game.goals_h}</span>
+                      <span>{game.goals_h}</span>     //Maybe add expected goals here as well and possibilities
                       <span>{game.goals_a}</span>
                     </div>
                   ) : (
@@ -123,7 +128,11 @@ export default function Page() {
                     </div>
                   )}
                 </div>
-                <div className={styles.team}>{game.a_title}</div>
+                <div className={styles.team}>
+                  <Link href={`/teams/${game.a_title}`}>
+                    {game.a_title}
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -131,6 +140,5 @@ export default function Page() {
       )}
     </div>
     </div>
-
   );
 }
