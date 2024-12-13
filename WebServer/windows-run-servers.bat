@@ -23,6 +23,5 @@ python311 -m pip install flask pymysql requests
 
 :: Open two terminal windows and run servers
 start cmd /k "cd /d "%cd%" && venv\Scripts\activate && python311 api.py"
-start cmd /k "cd /d "%cd%" && venv\Scripts\activate && python311 server.py"
 
 pause
