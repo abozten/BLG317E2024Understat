@@ -1,0 +1,309 @@
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.sidebar {
+    width: 250px;
+    background: rgba(34, 34, 34, 0.95);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sidebar button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+    background: rgba(34, 34, 34, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px 0 0 20px;
+    margin: 1rem;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        padding: 1rem;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .content {
+        margin: 0;
+        border-radius: 0;
+    }
+}
+
+/* Form Styles */
+.form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.formGroup {
+    margin-bottom: 1.5rem;
+}
+
+.formGroup input,
+.formGroup select {
+    width: 100%;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.teamList {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.teamItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.teamItem:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.teamItem span {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.buttonGroup {
+    position: relative;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.actionButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.editButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(74, 144, 226, 0.2);
+}
+
+.editButton:hover {
+    background: rgba(74, 144, 226, 0.4);
+    transform: scale(1.1) rotate(15deg);
+}
+
+.deleteButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(255, 59, 48, 0.2);
+}
+
+.deleteButton:hover {
+    background: rgba(255, 59, 48, 0.4);
+    transform: scale(1.1) rotate(-15deg);
+}
+
+.teamItem button {
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.teamItem button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.teamItem button:first-child {
+    background: rgba(74, 144, 226, 0.2);
+}
+
+.teamItem button:last-child {
+    background: rgba(255, 59, 48, 0.2);
+}
+
+.error {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    border-radius: 8px;
+    color: #ff3b30;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background: linear-gradient(135deg, #357abd 0%, #2d6aa3 100%);
+    transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+
+.operations {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 2rem;
+    position: relative;
+    width: 300px;
+    margin: 0 auto 2rem;
+}
+
+.operations label {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.operations input[type="radio"] {
+    display: none;
+}
+
+.operations::before {
+    content: '';
+    position: absolute;
+    width: calc(100% / 3);
+    height: calc(100% - 8px);
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.operations input[value="add"]:checked ~ label[for="add"] {
+    color: #ffffff;
+}
+
+.operations input[value="update"]:checked ~ label[for="update"] {
+    color: #ffffff;
+}
+
+.operations input[value="delete"]:checked ~ label[for="delete"] {
+    color: #ffffff;
+}
+
+.operations input[value="update"]:checked ~ ::before {
+    transform: translateX(100%);
+}
+
+.operations input[value="delete"]:checked ~ ::before {
+    transform: translateX(200%);
+}

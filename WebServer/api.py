@@ -1,11 +1,18 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 import pymysql
 from pymysql.cursors import DictCursor
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask_session import Session  # Add flask-session for session management
 
 app = Flask(__name__)
-CORS(app)  # Add this line after creating the Flask app
+CORS(app, supports_credentials=True)  # Replace with your frontend URL
+# Configure session
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = 'supersecretkey'
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+Session(app)
 
 # Database connection parameters
 db_config = {
@@ -368,6 +375,44 @@ def delete_match(match_id):
         connection.close()
     #Teams
 
+@app.route('/teams', methods=['GET'])
+
+def get_teams():
+
+    try:
+
+        connection = get_db_connection()
+
+        with connection.cursor() as cursor:
+
+            cursor.execute("""
+
+                SELECT DISTINCT h_title as team_name, h_id as team_id
+
+                FROM matches
+
+                UNION
+
+                SELECT DISTINCT a_title as team_name, a_id as team_id
+
+                FROM matches
+
+                ORDER BY team_name
+
+            """)
+
+            teams = cursor.fetchall()
+
+        return jsonify(teams)
+
+    except Exception as e:
+
+        return jsonify({'error': str(e)}), 400
+
+    finally:
+
+        connection.close()
+
 @app.route('/team/<team_name>', methods=['GET']) 
 def get_team(team_name):
     try:
@@ -490,6 +535,7 @@ def delete_team(team_name):
         connection.close()
 
 
+
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -497,7 +543,9 @@ def login():
         email = data.get('email')
         password = data.get('password')
 
-        if email == 'ozten22@itu.edu.tr' and password == '123456':#TODO : Implement a real login mechanism
+        # TODO: Implement a real login mechanism
+        if email == 'ozten22@itu.edu.tr' and password == '123456':
+            session['user'] = email
             return jsonify({
                 'message': 'Login successful',
                 'user': {
@@ -511,10 +559,17 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/validate-session', methods=['GET'])
+def validate_session():
+    if 'user' in session:
+        return jsonify({'status': 'valid'})
+    else:
+                return jsonify({'status': 'valid'})  #Needs fixing
+#return jsonify({'status': 'invalid'}), 401
+    
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Run this API server on port 5001
-
-
 
 
 
