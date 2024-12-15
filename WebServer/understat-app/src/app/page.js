@@ -115,19 +115,19 @@ export default function Page() {
                   <Link href={`/teams/${game.h_title}`}>
                     {game.h_title}
                   </Link>
-                </div>
+                </div> 
                 <div className={styles.scoreContainer}>
                   {game.isResult ? (
-                    <div className={styles.score}>
-                      <span>{game.goals_h}</span>     //Maybe add expected goals here as well and possibilities
+                    <Link href={`/matches/${game.match_id}`} className={styles.score}>
+                      <span>{game.goals_h}</span>
                       <span>{game.goals_a}</span>
-                    </div>
+                    </Link>
                   ) : (
                     <div className={styles.time}>
                       {formatTime(game.datetime)}
                     </div>
                   )}
-                </div>
+                </div>                
                 <div className={styles.team}>
                   <Link href={`/teams/${game.a_title}`}>
                     {game.a_title}
