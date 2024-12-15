@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import pymysql
 from pymysql.cursors import DictCursor
 from flask_cors import CORS
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 CORS(app)  # Add this line after creating the Flask app
@@ -488,5 +489,32 @@ def delete_team(team_name):
     finally:
         connection.close()
 
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        if email == 'ozten22@itu.edu.tr' and password == '123456':#TODO : Implement a real login mechanism
+            return jsonify({
+                'message': 'Login successful',
+                'user': {
+                    'email': email,
+                    'name': 'Test User'
+                }
+            }), 200
+        else:
+            return jsonify({'error': 'Invalid credentials'}), 401
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)  # Run this API server on port 5001
+
+
+
+
+
