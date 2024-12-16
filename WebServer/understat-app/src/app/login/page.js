@@ -10,16 +10,18 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const router = useRouter();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('http://localhost:5001/login', { // Full URL to Flask backend
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        const response = await fetch('https://127.0.0.1:5001/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            mode: 'cors', 
+            body: JSON.stringify({ email, password }),
+        });
 
             if (response.ok) {
                 router.push('/dashboard'); // Redirect to the dashboard page

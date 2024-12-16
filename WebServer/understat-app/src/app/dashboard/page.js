@@ -11,22 +11,50 @@ export default function Dashboard() {
     useEffect(() => {
         const validateSession = async () => {
             try {
-                const res = await fetch('http://localhost:5001/validate-session', {
-                    credentials: 'include'  // Ensure cookies are included in the request
+                const res = await fetch('https://127.0.0.1:5001/validate-session', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors'
                 });
+            
                 if (res.ok) {
-                    setIsAuthenticated(true);
+                    const data = await res.json();
+                    if (data.status === 'valid') {
+                        setIsAuthenticated(true);
+                    } else {
+                        router.replace('/login');
+                    }
                 } else {
-                    router.push('/login');
+                    router.replace('/login');
                 }
             } catch (error) {
-                console.error('Failed to validate session:', error);
-                router.push('/login');
+                console.error('Session validation failed:', error);
+                router.replace('/login');
             }
         };
 
         validateSession();
     }, [router]);
+
+    const handleLogout = async () => {
+        try {
+            await fetch('https://localhost:5001/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                mode: 'cors',
+            });
+            router.replace('/login');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
 
     if (!isAuthenticated) {
         return null;
@@ -47,6 +75,11 @@ export default function Dashboard() {
 
     return (
         <div className={styles.dashboard}>
+            <div className={styles.header}>
+                <button onClick={handleLogout} className={styles.logoutButton}>
+                    Logout
+                </button>
+            </div>
             <Sidebar setSelectedSection={setSelectedSection} />
             <div className={styles.content}>
                 {renderForm()}
@@ -79,7 +112,7 @@ function TeamForm() {
 
     const fetchTeams = async () => {
         try {
-            const response = await fetch('http://localhost:5001/teams');
+            const response = await fetch('https://localhost:5001/teams');
             const data = await response.json();
             setTeams(data);
         } catch (error) {
@@ -94,15 +127,15 @@ function TeamForm() {
             let url, method;
             switch (operation) {
                 case 'add':
-                    url = 'http://localhost:5001/team';
+                    url = 'https://localhost:5001/team';
                     method = 'POST';
                     break;
                 case 'update':
-                    url = `http://localhost:5001/team/${formData.team_name}`;
+                    url = `https://localhost:5001/team/${formData.team_name}`;
                     method = 'PUT';
                     break;
                 case 'delete':
-                    url = `http://localhost:5001/team/${formData.team_name}`;
+                    url = `https://localhost:5001/team/${formData.team_name}`;
                     method = 'DELETE';
                     break;
             }

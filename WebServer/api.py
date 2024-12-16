@@ -4,14 +4,20 @@ from pymysql.cursors import DictCursor
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_session import Session  # Add flask-session for session management
-
-app = Flask(__name__)
-CORS(app, supports_credentials=True)  # Replace with your frontend URL
+app = Flask(__name__)#An issue with chrome and cookies, so we need to set the session cookie to secure and samesite=None.
+CORS(app, 
+     resources={r"/*": {
+         "origins": ["https://127.0.0.1:3000", "http://127.0.0.1:3000"],
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "expose_headers": ["Content-Range", "X-Content-Range"],
+         "supports_credentials": True
+     }})
 # Configure session
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'supersecretkey'
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_SECURE'] = True
 Session(app)
 
 # Database connection parameters
@@ -468,22 +474,21 @@ def create_team():
         team_data = request.get_json()
         if not team_data.get('team_name') or not team_data.get('team_id'):
             return jsonify({'error': 'team_name and team_id are required'}), 400
-            
-        connection = get_db_connection()
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO teams (team_name, team_id)
-                VALUES (%s, %s)
-                RETURNING team_id, team_name
-            """, (team_data['team_name'], team_data['team_id']))
-            new_team = cursor.fetchone()
-            connection.commit()
-            
-        return jsonify({'message': 'Team created', 'team': new_team}), 201
+        
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO teams (team_name, team_id)
+                    VALUES (%s, %s)
+                    RETURNING team_id, team_name
+                """, (team_data['team_name'], team_data['team_id']))
+                new_team = cursor.fetchone()
+                connection.commit()
+        
+        return jsonify({'message': 'Team created', 'team': {'team_id': new_team[0], 'team_name': new_team[1]}}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    finally:
-        connection.close()
+
 
 @app.route('/team/<team_name>', methods=['PUT'])#TODO : Add error handling if unique columns are not unique
 def update_team(team_name):
@@ -536,40 +541,60 @@ def delete_team(team_name):
 
 
 
+# Hardcoded credentials
+ADMIN_CREDENTIALS = {
+    'email': 'ozten22@itu.edu.tr',
+    'password': '123456',
+    'name': 'Admin'
+}
+
 @app.route('/login', methods=['POST'])
 def login():
+    app.logger.debug("Login attempt")
     try:
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-
-        # TODO: Implement a real login mechanism
-        if email == 'ozten22@itu.edu.tr' and password == '123456':
-            session['user'] = email
+        if not email or not password:
+            return jsonify({'error': 'Email and password required'}), 400
+        if email == ADMIN_CREDENTIALS['email'] and password == ADMIN_CREDENTIALS['password']:
+            session['user'] = {
+                'email': ADMIN_CREDENTIALS['email'],
+                'name': ADMIN_CREDENTIALS['name'],
+                'authenticated': True
+            }
+            app.logger.debug(f"Session created: {session.get('user')}") 
             return jsonify({
                 'message': 'Login successful',
                 'user': {
-                    'email': email,
-                    'name': 'Test User'
+                    'email': ADMIN_CREDENTIALS['email'],
+                    'name': ADMIN_CREDENTIALS['name']
                 }
             }), 200
         else:
             return jsonify({'error': 'Invalid credentials'}), 401
-            
     except Exception as e:
+        app.logger.error(f"Error during login: {e}")
         return jsonify({'error': str(e)}), 500
-
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 @app.route('/validate-session', methods=['GET'])
 def validate_session():
-    if 'user' in session:
-        return jsonify({'status': 'valid'})
-    else:
-                return jsonify({'status': 'valid'})  #Needs fixing
-#return jsonify({'status': 'invalid'}), 401
-    
+    if session.get('user', {}).get('authenticated'):
+        return jsonify({
+            'status': 'valid',
+            'user': {
+                'email': session['user']['email'],
+                'name': session['user']['name']
+            }
+        })
+    return jsonify({'status': 'invalid'}), 401
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)  # Run this API server on port 5001
+    app.run(debug=True, port=5001, ssl_context=('cert.pem', 'key.pem'))
 
 
 

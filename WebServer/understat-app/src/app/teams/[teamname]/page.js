@@ -13,7 +13,7 @@ export default function MatchStatistics() {
         setLoading(true);
 
         // Fetch matches from backend
-        const response = await fetch("http://localhost:5001/matches"); // Update to match your API URL
+        const response = await fetch("https://localhost:5001/matches"); // Update to match your API URL
         if (!response.ok) {
           throw new Error(`Failed to fetch matches: ${response.status}`);
         }

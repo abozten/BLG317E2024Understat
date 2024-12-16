@@ -22,7 +22,7 @@ export default function Page() {
       const startOfWeek = new Date(currentWeek);
       startOfWeek.setDate(endOfWeek.getDate() - 6);
 
-      const response = await fetch(`http://localhost:5001/matchesdate?start=${startOfWeek.toISOString()}&end=${endOfWeek.toISOString()}`);
+      const response = await fetch(`https://localhost:5001/matchesdate?start=${startOfWeek.toISOString()}&end=${endOfWeek.toISOString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch matches');
