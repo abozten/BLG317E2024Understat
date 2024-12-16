@@ -158,7 +158,7 @@ def get_player(player_id):
     finally:
         connection.close()
 
-@app.route('/players', methods=['POST'])
+@app.route('/addplayer', methods=['POST'])
 def create_player():
     try:
         data = request.get_json()
@@ -382,41 +382,20 @@ def delete_match(match_id):
     #Teams
 
 @app.route('/teams', methods=['GET'])
-
 def get_teams():
-
     try:
-
         connection = get_db_connection()
-
         with connection.cursor() as cursor:
-
             cursor.execute("""
-
-                SELECT DISTINCT h_title as team_name, h_id as team_id
-
-                FROM matches
-
-                UNION
-
-                SELECT DISTINCT a_title as team_name, a_id as team_id
-
-                FROM matches
-
+                SELECT team_name, team_id 
+                FROM teams
                 ORDER BY team_name
-
             """)
-
             teams = cursor.fetchall()
-
         return jsonify(teams)
-
     except Exception as e:
-
         return jsonify({'error': str(e)}), 400
-
     finally:
-
         connection.close()
 
 @app.route('/team/<team_name>', methods=['GET']) 
@@ -467,8 +446,8 @@ def get_team_squad(team_name):
     finally:
         if connection:
             connection.close()
-
-@app.route('/team', methods=['POST'])
+#Team table
+@app.route('/addteam', methods=['POST'])#This works put returns an error 0?
 def create_team():
     try:
         team_data = request.get_json()
@@ -480,17 +459,20 @@ def create_team():
                 cursor.execute("""
                     INSERT INTO teams (team_name, team_id)
                     VALUES (%s, %s)
-                    RETURNING team_id, team_name
+                """, (team_data['team_name'], team_data['team_id']))
+                connection.commit()
+                cursor.execute("""
+                    SELECT team_id, team_name FROM teams
+                    WHERE team_name = %s AND team_id = %s
                 """, (team_data['team_name'], team_data['team_id']))
                 new_team = cursor.fetchone()
-                connection.commit()
         
         return jsonify({'message': 'Team created', 'team': {'team_id': new_team[0], 'team_name': new_team[1]}}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/team/<team_name>', methods=['PUT'])#TODO : Add error handling if unique columns are not unique
+@app.route('/team/<team_name>', methods=['PUT'])
 def update_team(team_name):
     try:
         team_data = request.get_json()
@@ -503,13 +485,19 @@ def update_team(team_name):
                 UPDATE teams 
                 SET team_id = %s
                 WHERE team_name = %s
-                RETURNING team_id, team_name
             """, (team_data['team_id'], team_name))
+            
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Team not found'}), 404
+            
+            # Fetch updated team data
+            cursor.execute("""
+                SELECT team_id, team_name 
+                FROM teams 
+                WHERE team_name = %s
+            """, (team_name,))
             updated_team = cursor.fetchone()
             connection.commit()
-            
-        if not updated_team:
-            return jsonify({'error': 'Team not found'}), 404
             
         return jsonify({'message': 'Team updated', 'team': updated_team})
     except Exception as e:
@@ -522,24 +510,17 @@ def delete_team(team_name):
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
-                DELETE FROM teams
-                WHERE team_name = %s
-                RETURNING team_id, team_name
-            """, (team_name,))
-            deleted_team = cursor.fetchone()
+            cursor.execute("DELETE FROM teams WHERE team_name = %s", (team_name,))
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Team not found'}), 404
             connection.commit()
-            
-        if not deleted_team:
-            return jsonify({'error': 'Team not found'}), 404
-            
-        return jsonify({'message': 'Team deleted', 'team': deleted_team})
+        return jsonify({'message': f'Team {team_name} deleted successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
         connection.close()
 
-
+#Authentication
 
 # Hardcoded credentials
 ADMIN_CREDENTIALS = {

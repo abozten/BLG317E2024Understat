@@ -127,7 +127,7 @@ function TeamForm() {
             let url, method;
             switch (operation) {
                 case 'add':
-                    url = 'https://localhost:5001/team';
+                    url = 'https://localhost:5001/addteam';
                     method = 'POST';
                     break;
                 case 'update':
@@ -146,10 +146,14 @@ function TeamForm() {
                 body: operation !== 'delete' ? JSON.stringify(formData) : undefined
             });
 
-            if (!response.ok) throw new Error('Operation failed');
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Operation failed');
+            }
             
             fetchTeams();
             resetForm();
+            setError(null); // Clear any previous errors on success
         } catch (error) {
             setError(error.message);
         } finally {
@@ -171,35 +175,41 @@ function TeamForm() {
         <div className={styles.form}>
             {error && <div className={styles.error}>{error}</div>}
             
-            <div className={styles.operations}>
-                <label>
-                    <input
-                        type="radio"
-                        value="add"
-                        checked={operation === 'add'}
-                        onChange={(e) => {
-                            setOperation(e.target.value);
-                            resetForm();
-                        }}
-                    /> Add
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        value="update"
-                        checked={operation === 'update'}
-                        onChange={(e) => setOperation(e.target.value)}
-                    /> Update
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        value="delete"
-                        checked={operation === 'delete'}
-                        onChange={(e) => setOperation(e.target.value)}
-                    /> Delete
-                </label>
-            </div>
+<div className={styles.operations}>
+    <label>
+        <input
+            type="radio"
+            name="operation"
+            value="add"
+            checked={operation === 'add'}
+            onChange={(e) => {
+                setOperation(e.target.value);
+                resetForm();
+            }}
+        />
+        Add
+    </label>
+    <label>
+        <input
+            type="radio"
+            name="operation"
+            value="update"
+            checked={operation === 'update'}
+            onChange={(e) => setOperation(e.target.value)}
+        />
+        Update
+    </label>
+    <label>
+        <input
+            type="radio"
+            name="operation"
+            value="delete"
+            checked={operation === 'delete'}
+            onChange={(e) => setOperation(e.target.value)}
+        />
+        Delete
+    </label>
+</div>
 
             <form onSubmit={handleSubmit} style={{ transition: 'opacity 0.3s' }}>
                 {operation !== 'delete' && (
@@ -244,10 +254,200 @@ function TeamForm() {
         </div>
     );
 }
-
 function PlayerForm() {
-    // Implement add, update, delete functionality for players
-    return <div>Player Form</div>;
+    const [players, setPlayers] = useState([]);
+    const [formData, setFormData] = useState({
+        player_id: '',
+        player_name: '',
+        games: 0,
+        time: 0,
+        goals: 0,
+        xG: 0,
+        assists: 0,
+        xA: 0,
+        shots: 0,
+        key_passes: 0,
+        yellow_cards: 0,
+        red_cards: 0,
+        position: '',
+        team_title: '',
+        npg: 0,
+        npxG: 0,
+        xGChain: 0,
+        xGBuildup: 0,
+        year: 0
+    });
+    const [operation, setOperation] = useState('add');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+
+    useEffect(() => {
+        fetchPlayers();
+    }, []);
+
+    const fetchPlayers = async () => {
+        try {
+            const response = await fetch('https://localhost:5001/players');
+            const data = await response.json();
+            setPlayers(data);
+        } catch (error) {
+            setError('Failed to fetch players');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            let url, method;
+            switch (operation) {
+                case 'add':
+                    url = 'https://localhost:5001/addplayer';
+                    method = 'POST';
+                    break;
+                case 'update':
+                    url = `https://localhost:5001/player/${formData.player_id}`;
+                    method = 'PUT';
+                    break;
+                case 'delete':
+                    url = `https://localhost:5001/player/${formData.player_id}`;
+                    method = 'DELETE';
+                    break;
+            }
+
+            const response = await fetch(url, {
+                method,
+                headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
+                body: operation !== 'delete' ? JSON.stringify(formData) : undefined
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Operation failed');
+            }
+            
+            fetchPlayers();
+            resetForm();
+            setError(null);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            player_id: '',
+            player_name: '',
+            games: 0,
+            time: 0,
+            goals: 0,
+            xG: 0,
+            assists: 0,
+            xA: 0,
+            shots: 0,
+            key_passes: 0,
+            yellow_cards: 0,
+            red_cards: 0,
+            position: '',
+            team_title: '',
+            npg: 0,
+            npxG: 0,
+            xGChain: 0,
+            xGBuildup: 0,
+            year: 0
+        });
+        setSelectedPlayer(null);
+    };
+
+    const handlePlayerSelect = (player) => {
+        setFormData(player);
+        setSelectedPlayer(player);
+    };
+
+    return (
+        <div className={styles.form}>
+            {error && <div className={styles.error}>{error}</div>}
+            
+            <div className={styles.operations}>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="add"
+                        checked={operation === 'add'}
+                        onChange={(e) => {
+                            setOperation(e.target.value);
+                            resetForm();
+                        }}
+                    />
+                    Add
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="update"
+                        checked={operation === 'update'}
+                        onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Update
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="delete"
+                        checked={operation === 'delete'}
+                        onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Delete
+                </label>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+                {operation !== 'delete' && (
+                    <>
+                        {Object.keys(formData).map(key => (
+                            <div className={styles.formGroup} key={key}>
+                                <label>{key.replace('_', ' ').toUpperCase()}:</label>
+                                <input
+                                    type={typeof formData[key] === 'number' ? 'number' : 'text'}
+                                    step={key.includes('xG') || key.includes('xA') ? '0.01' : '1'}
+                                    value={formData[key]}
+                                    onChange={(e) => setFormData({
+                                        ...formData,
+                                        [key]: typeof formData[key] === 'number' ? 
+                                            parseFloat(e.target.value) || 0 : 
+                                            e.target.value
+                                    })}
+                                    required
+                                />
+                            </div>
+                        ))}
+                    </>
+                )}
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Player`}
+                </button>
+            </form>
+
+            <div className={styles.playerList}>
+                {players.map(player => (
+                    <div 
+                        key={player.player_id} 
+                        className={`${styles.playerItem} ${selectedPlayer?.player_id === player.player_id ? styles.selected : ''}`}
+                        onClick={() => handlePlayerSelect(player)}
+                    >
+                        <span>{player.player_name}</span>
+                        <span>{player.team_title}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function MatchForm() {
