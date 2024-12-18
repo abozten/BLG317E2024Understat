@@ -240,6 +240,69 @@ def update_player(player_id):
     finally:
         connection.close()
 
+@app.route('/players/search', methods=['GET'])
+def get_players_search():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        offset = (page - 1) * limit
+
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        with connection.cursor() as cursor:
+
+            query = """
+                SELECT season_player_id, player_id, player_name, games, time, goals, xG,
+                       assists, xA, shots, key_passes, yellow_cards, red_cards, position,
+                       team_title, npg, npxG, xGChain, xGBuildup, year
+                FROM players
+                WHERE 1=1
+            """
+            conditions = []
+            params = []
+
+            for key, value in request.args.items():
+                if key == 'team':
+                    teams = value.split(',')
+                    placeholders = ', '.join(['%s'] * len(teams))
+                    conditions.append(f"team_title IN ({placeholders})")
+                    params.extend(teams)
+                elif key.endswith('_min'):
+                    column = key[:-4]
+                    try:
+                        conditions.append(f"{column} >= %s")
+                        params.append(float(value)) #ensure that values are numbers
+                    except ValueError:
+                        return jsonify({'error': f"Invalid value for {key}"}), 400
+
+                elif key.endswith('_max'):
+                   column = key[:-4]
+                   try:
+                       conditions.append(f"{column} <= %s")
+                       params.append(float(value)) #ensure that values are numbers
+                   except ValueError:
+                       return jsonify({'error': f"Invalid value for {key}"}), 400
+
+            if conditions:
+                query += " AND " + " AND ".join(conditions)
+
+            query += " LIMIT %s OFFSET %s"
+            params.append(limit)
+            params.append(offset)
+
+
+            cursor.execute(query, params)
+            players = cursor.fetchall()
+
+        return jsonify(players)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+            
 @app.route('/players/<int:player_id>', methods=['DELETE'])
 def delete_player(player_id):
     try:
