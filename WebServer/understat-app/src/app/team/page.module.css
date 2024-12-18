@@ -1,152 +1,97 @@
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  padding-top: 80px; /* Adjust this value based on the height of your TopBar */
-  background-color: #4a4f69;
-  color: #fff;
+  width: 100%;
+  overflow-x: auto;
+  background: rgba(34, 34, 34, 0.95); /* Dashboard background color */
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  margin: 1rem;
 }
 
-.nav {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.breadcrumb {
-  color: #888;
-}
-
-.timezone {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #888;
-}
-
-.toggleBtn {
-  background: none;
-  border: 1px solid #444;
-  color: #888;
-  padding: 5px 15px;
-  cursor: pointer;
-}
-
-.toggleBtn.active {
-  background-color: #2a2a2a;
-  color: #fff;
-  border-color: #666;
-}
-
-.weekNav {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.weekBtn {
-  background: #2a2a2a;
-  border: none;
-  color: #fff;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.matchDay {
-  margin-bottom: 30px;
-}
-
-.date {
-  text-align: center;
-  color: #fff;
+.tableTitle {
   font-size: 1.5rem;
-  margin-bottom: 15px;
+  font-weight: bold;
+  color: #ffffff;
 }
 
-.match {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #2a2a2a;
-  padding: 15px;
-  margin-bottom: 5px;
-  border-radius: 4px;
+.filterButton {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.team {
-  flex: 1;
-  color: #ccc;
+.filterButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-.team:last-child {
-  text-align: right;
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.scoreContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
+.headerCell {
+  padding: 12px 15px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
-.score {
-  display: flex;
-  gap: 20px;
-  font-size: 1.2rem;
+.cell {
+  padding: 12px 15px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+   transition: background-color 0.3s ease;
 }
 
-.odds {
-  display: flex;
-  gap: 20px;
-  font-size: 0.8rem;
-  color: #666;
+.row:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.time {
-  padding: 0 20px;
-  color: #fff;
+
+.row:hover {
+  background-color: rgba(255, 255, 255, 0.08);
 }
+
 
 @media (max-width: 768px) {
   .container {
-    padding: 10px;
-    padding-top: 80px; /* Adjust this value based on the height of your TopBar */
+      overflow-x: auto;
+      width: 100%;
   }
-  
-  .match {
-    padding: 10px;
-  }
-  
-  .team {
-    font-size: 0.9rem;
-  }
-  
-  .score {
-    font-size: 1rem;
-    gap: 10px;
-  }
-}
 
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #fff;
-}
+  .table {
+      white-space: nowrap; /* Keep the cells in one line to enable horizontal scrolling */
+  }
 
-.error {
-  text-align: center;
-  padding: 2rem;
-  color: #ff4444;
-}
-
-.noMatches {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #666;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin: 1rem 0;
+   .cell,
+  .headerCell {
+      padding: 8px 8px;
+      white-space: nowrap;
+       font-size: 0.9rem;
+  }
 }

@@ -1,0 +1,89 @@
+.container {
+    background: rgba(34, 34, 34, 0.95); /* Dashboard background color */
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    margin: 1rem;
+    color: #ffffff;
+        min-height: 100vh;
+}
+
+.topBar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 2rem;
+}
+
+.homeButton {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.homeButton:hover {
+    background: linear-gradient(135deg, #357abd 0%, #2d6aa3 100%);
+}
+
+.profile {
+    display: flex;
+    flex-direction: column;
+}
+
+.playerName {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.playerInfo {
+    display: flex;
+     flex-wrap: wrap;
+     gap: 2rem;
+}
+
+.playerSection {
+    flex: 1;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+     background: rgba(255, 255, 255, 0.05);
+     min-width: 300px;
+}
+
+.sectionTitle {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.playerInfo p {
+    line-height: 1.6;
+}
+
+.playerInfo strong {
+    font-weight: 500;
+    color: rgba(74, 144, 226, 1);
+}
+
+@media (max-width: 768px) {
+    .profile {
+        padding: 1rem;
+    }
+     .playerInfo {
+        flex-direction: column; /* Stack sections on smaller screens */
+        gap: 1rem;
+    }
+    .playerSection {
+       min-width: auto;
+    }
+}
