@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -171,45 +171,45 @@ function TeamForm() {
         setSelectedTeam(team);
     };
 
-    return (
+     return (
         <div className={styles.form}>
             {error && <div className={styles.error}>{error}</div>}
             
-<div className={styles.operations}>
-    <label>
-        <input
-            type="radio"
-            name="operation"
-            value="add"
-            checked={operation === 'add'}
-            onChange={(e) => {
-                setOperation(e.target.value);
-                resetForm();
-            }}
-        />
-        Add
-    </label>
-    <label>
-        <input
-            type="radio"
-            name="operation"
-            value="update"
-            checked={operation === 'update'}
-            onChange={(e) => setOperation(e.target.value)}
-        />
-        Update
-    </label>
-    <label>
-        <input
-            type="radio"
-            name="operation"
-            value="delete"
-            checked={operation === 'delete'}
-            onChange={(e) => setOperation(e.target.value)}
-        />
-        Delete
-    </label>
-</div>
+            <div className={styles.operations}>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="add"
+                        checked={operation === 'add'}
+                       onChange={(e) => {
+                            setOperation(e.target.value);
+                            resetForm();
+                         }}
+                    />
+                    Add
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="update"
+                        checked={operation === 'update'}
+                        onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Update
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="delete"
+                        checked={operation === 'delete'}
+                        onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Delete
+                </label>
+            </div>
 
             <form onSubmit={handleSubmit} style={{ transition: 'opacity 0.3s' }}>
                 {operation !== 'delete' && (
@@ -254,203 +254,565 @@ function TeamForm() {
         </div>
     );
 }
+
+
+
 function PlayerForm() {
-    const [players, setPlayers] = useState([]);
-    const [formData, setFormData] = useState({
-        player_id: '',
-        player_name: '',
-        games: 0,
-        time: 0,
-        goals: 0,
-        xG: 0,
-        assists: 0,
-        xA: 0,
-        shots: 0,
-        key_passes: 0,
-        yellow_cards: 0,
-        red_cards: 0,
-        position: '',
-        team_title: '',
-        npg: 0,
-        npxG: 0,
-        xGChain: 0,
-        xGBuildup: 0,
-        year: 0
-    });
-    const [operation, setOperation] = useState('add');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [players, setPlayers] = useState([]);
+  const [formData, setFormData] = useState({
+    player_id: '',
+    player_name: '',
+    games: 0,
+    time: 0,
+    goals: 0,
+    xG: 0,
+    assists: 0,
+    xA: 0,
+    shots: 0,
+    key_passes: 0,
+    yellow_cards: 0,
+    red_cards: 0,
+    position: '',
+    team_title: '',
+    npg: 0,
+    npxG: 0,
+    xGChain: 0,
+    xGBuildup: 0,
+    year: 0,
+  });
+  const [operation, setOperation] = useState('add');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
-    useEffect(() => {
-        fetchPlayers();
-    }, []);
+  // Add these state variables
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [scrollTimeout, setScrollTimeout] = useState(null); // Added scroll timeout state
+  const PLAYERS_PER_PAGE = 20;
 
-    const fetchPlayers = async () => {
-        try {
-            const response = await fetch('https://localhost:5001/players');
-            const data = await response.json();
-            setPlayers(data);
-        } catch (error) {
-            setError('Failed to fetch players');
+  const playerListRef = useRef(null);
+
+  // Update fetchPlayers function
+  const fetchPlayers = async (pageNum = 1, search = '') => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://localhost:5001/players?page=${pageNum}&search=${search}&limit=${PLAYERS_PER_PAGE}`
+      );
+      const data = await response.json();
+
+      if (pageNum === 1) {
+        setPlayers(data);
+      } else {
+        setPlayers((prev) => [...prev, ...data]);
+      }
+
+      setHasMore(data.length === PLAYERS_PER_PAGE);
+      setLoading(false);
+    } catch (error) {
+      setError('Failed to fetch players');
+      setLoading(false);
+    }
+  };
+
+  // Add search handler
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // Clear existing timeout
+    if (searchTimeout) clearTimeout(searchTimeout);
+
+    // Set new timeout for debouncing
+    const timeoutId = setTimeout(() => {
+      setPage(1);
+      fetchPlayers(1, value);
+    }, 500);
+
+    setSearchTimeout(timeoutId);
+  };
+
+  // Add infinite scroll handler
+  const handleScroll = () => {
+    if (!playerListRef.current) return;
+
+    // Debounce the scroll event
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    setScrollTimeout(
+      setTimeout(() => {
+        const { scrollTop, clientHeight, scrollHeight } = playerListRef.current;
+        if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
+          setPage((prev) => prev + 1);
+          fetchPlayers(page + 1, searchTerm);
         }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            let url, method;
-            switch (operation) {
-                case 'add':
-                    url = 'https://localhost:5001/addplayer';
-                    method = 'POST';
-                    break;
-                case 'update':
-                    url = `https://localhost:5001/player/${formData.player_id}`;
-                    method = 'PUT';
-                    break;
-                case 'delete':
-                    url = `https://localhost:5001/player/${formData.player_id}`;
-                    method = 'DELETE';
-                    break;
-            }
-
-            const response = await fetch(url, {
-                method,
-                headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
-                body: operation !== 'delete' ? JSON.stringify(formData) : undefined
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Operation failed');
-            }
-            
-            fetchPlayers();
-            resetForm();
-            setError(null);
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const resetForm = () => {
-        setFormData({
-            player_id: '',
-            player_name: '',
-            games: 0,
-            time: 0,
-            goals: 0,
-            xG: 0,
-            assists: 0,
-            xA: 0,
-            shots: 0,
-            key_passes: 0,
-            yellow_cards: 0,
-            red_cards: 0,
-            position: '',
-            team_title: '',
-            npg: 0,
-            npxG: 0,
-            xGChain: 0,
-            xGBuildup: 0,
-            year: 0
-        });
-        setSelectedPlayer(null);
-    };
-
-    const handlePlayerSelect = (player) => {
-        setFormData(player);
-        setSelectedPlayer(player);
-    };
-
-    return (
-        <div className={styles.form}>
-            {error && <div className={styles.error}>{error}</div>}
-            
-            <div className={styles.operations}>
-                <label>
-                    <input
-                        type="radio"
-                        name="operation"
-                        value="add"
-                        checked={operation === 'add'}
-                        onChange={(e) => {
-                            setOperation(e.target.value);
-                            resetForm();
-                        }}
-                    />
-                    Add
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        name="operation"
-                        value="update"
-                        checked={operation === 'update'}
-                        onChange={(e) => setOperation(e.target.value)}
-                    />
-                    Update
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        name="operation"
-                        value="delete"
-                        checked={operation === 'delete'}
-                        onChange={(e) => setOperation(e.target.value)}
-                    />
-                    Delete
-                </label>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-                {operation !== 'delete' && (
-                    <>
-                        {Object.keys(formData).map(key => (
-                            <div className={styles.formGroup} key={key}>
-                                <label>{key.replace('_', ' ').toUpperCase()}:</label>
-                                <input
-                                    type={typeof formData[key] === 'number' ? 'number' : 'text'}
-                                    step={key.includes('xG') || key.includes('xA') ? '0.01' : '1'}
-                                    value={formData[key]}
-                                    onChange={(e) => setFormData({
-                                        ...formData,
-                                        [key]: typeof formData[key] === 'number' ? 
-                                            parseFloat(e.target.value) || 0 : 
-                                            e.target.value
-                                    })}
-                                    required
-                                />
-                            </div>
-                        ))}
-                    </>
-                )}
-                <button type="submit" className={styles.submitButton} disabled={loading}>
-                    {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Player`}
-                </button>
-            </form>
-
-            <div className={styles.playerList}>
-                {players.map(player => (
-                    <div 
-                        key={player.player_id} 
-                        className={`${styles.playerItem} ${selectedPlayer?.player_id === player.player_id ? styles.selected : ''}`}
-                        onClick={() => handlePlayerSelect(player)}
-                    >
-                        <span>{player.player_name}</span>
-                        <span>{player.team_title}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
+      }, 200) // Small delay of 200ms
     );
+  };
+
+  // Update useEffect
+  useEffect(() => {
+    fetchPlayers(1, searchTerm);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      let url, method;
+      switch (operation) {
+        case 'add':
+          url = 'https://localhost:5001/addplayer';
+          method = 'POST';
+          break;
+        case 'update':
+          url = `https://localhost:5001/player/${formData.player_id}`;
+          method = 'PUT';
+          break;
+        case 'delete':
+          url = `https://localhost:5001/player/${formData.player_id}`;
+          method = 'DELETE';
+          break;
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
+        body: operation !== 'delete' ? JSON.stringify(formData) : undefined,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Operation failed');
+      }
+
+      fetchPlayers(1, searchTerm);
+      resetForm();
+      setError(null);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      player_id: '',
+      player_name: '',
+      games: 0,
+      time: 0,
+      goals: 0,
+      xG: 0,
+      assists: 0,
+      xA: 0,
+      shots: 0,
+      key_passes: 0,
+      yellow_cards: 0,
+      red_cards: 0,
+      position: '',
+      team_title: '',
+      npg: 0,
+      npxG: 0,
+      xGChain: 0,
+      xGBuildup: 0,
+      year: 0,
+    });
+    setSelectedPlayer(null);
+  };
+
+  const handlePlayerSelect = (player) => {
+    setFormData(player);
+    setSelectedPlayer(player);
+  };
+
+  return (
+    <div className={styles.form}>
+      {error && <div className={styles.error}>{error}</div>}
+      <div className={styles.operations}>
+        <label>
+          <input
+            type="radio"
+            name="operation"
+            value="add"
+            checked={operation === 'add'}
+              onChange={() => {
+                setOperation('add');
+                resetForm();
+              }}
+          />
+          Add
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="operation"
+            value="update"
+            checked={operation === 'update'}
+             onChange={() => setOperation('update')}
+          />
+          Update
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="operation"
+            value="delete"
+            checked={operation === 'delete'}
+            onChange={() => setOperation('delete')}
+          />
+          Delete
+        </label>
+      </div>
+      <form onSubmit={handleSubmit}>
+        {operation !== 'delete' && (
+          <>
+            {Object.keys(formData).map((key) => (
+              <div className={styles.formGroup} key={key}>
+                <label>{key.replace('_', ' ').toUpperCase()}:</label>
+                <input
+                  type={typeof formData[key] === 'number' ? 'number' : 'text'}
+                  step={key.includes('xG') || key.includes('xA') ? '0.01' : '1'}
+                  value={formData[key]}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      [key]:
+                        typeof formData[key] === 'number'
+                          ? parseFloat(e.target.value) || 0
+                          : e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+            ))}
+          </>
+        )}
+        <button type="submit" className={styles.submitButton} disabled={loading}>
+          {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Player`}
+        </button>
+      </form>
+
+      <input
+        type="text"
+        className={styles.searchInput}
+        placeholder="Search player..."
+        value={searchTerm}
+        onChange={handleSearch}
+      />
+        <div className={styles.playerListContainer} onScroll={handleScroll} ref={playerListRef}>
+            {players.map(player => (
+                <div 
+                  key={player.player_id} 
+                  className={`${styles.playerItem} ${selectedPlayer?.player_id === player.player_id ? styles.selected : ''}`}
+                  onClick={() => handlePlayerSelect(player)}
+                >
+                  <span>{player.player_name}</span>
+                  <span>{player.team_title}</span>
+              </div>
+            ))}
+           {loading && <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>Loading...</div>}
+        </div>
+    </div>
+  );
 }
 
+
+
+
+
 function MatchForm() {
-    // Implement add, update, delete functionality for matches
-    return <div>Match Form</div>;
+  const [matches, setMatches] = useState([]);
+  const [formData, setFormData] = useState({
+      match_id: '',
+      isResult: false,
+      datetime: '',
+      h_id: '',
+      h_title: '',
+      h_short_title: '',
+      a_id: '',
+      a_title: '',
+      a_short_title: '',
+      goals_h: 0,
+      goals_a: 0,
+      xG_h: 0,
+      xG_a: 0,
+      forecast_w: 0,
+      forecast_d: 0,
+      forecast_l: 0,
+  });
+  const [operation, setOperation] = useState('add');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+
+  // Add these state variables
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [scrollTimeout, setScrollTimeout] = useState(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const MATCHES_PER_PAGE = 20;
+
+  const matchListRef = useRef(null);
+
+  // Update fetchMatches function
+  const fetchMatches = async (pageNum = 1, search = '', startDate = '', endDate = '') => {
+      try {
+          setLoading(true);
+          let url = `https://localhost:5001/matches/search?page=${pageNum}&search=${search}&limit=${MATCHES_PER_PAGE}`;
+          if(startDate) {
+              url+= `&start_date=${startDate}`;
+          }
+          if(endDate){
+              url+=`&end_date=${endDate}`;
+          }
+
+        const response = await fetch(url);
+
+
+           const data = await response.json();
+           if(Array.isArray(data)){
+               if (pageNum === 1) {
+                   setMatches(data);
+               } else {
+                   setMatches(prev => [...prev, ...data]);
+               }
+
+               setHasMore(data.length === MATCHES_PER_PAGE);
+           }else {
+               setMatches([])
+               setHasMore(false)
+
+           }
+          setLoading(false);
+      } catch (error) {
+          setError('Failed to fetch matches');
+          setLoading(false);
+      }
+  };
+
+  // Add search handler
+  const handleSearch = (e) => {
+      const value = e.target.value;
+      setSearchTerm(value);
+
+      // Clear existing timeout
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      // Set new timeout for debouncing
+      const timeoutId = setTimeout(() => {
+          setPage(1);
+           fetchMatches(1, value, startDate, endDate);
+      }, 500);
+
+      setSearchTimeout(timeoutId);
+  };
+
+
+  // Add infinite scroll handler
+ const handleScroll = () => {
+      if (!matchListRef.current) return;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    setScrollTimeout(
+        setTimeout(() => {
+          const { scrollTop, clientHeight, scrollHeight } = matchListRef.current;
+          if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
+            setPage((prev) => prev + 1);
+            fetchMatches(page + 1, searchTerm, startDate, endDate);
+          }
+         }, 200)
+      )
+ }
+
+
+// Update useEffect
+useEffect(() => {
+    fetchMatches(1, searchTerm, startDate, endDate);
+}, []);
+
+
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      try {
+          let url, method;
+           switch (operation) {
+              case 'add':
+                  url = 'https://localhost:5001/matches';
+                  method = 'POST';
+                  break;
+              case 'update':
+                url = `https://localhost:5001/matches/${formData.match_id}`;
+                  method = 'PUT';
+                  break;
+              case 'delete':
+                  url = `https://localhost:5001/matches/${formData.match_id}`;
+                  method = 'DELETE';
+                  break;
+          }
+         const formattedFormData = {
+             ...formData,
+             datetime: formData.datetime ? new Date(formData.datetime).toISOString() : null
+         };
+
+
+          const response = await fetch(url, {
+              method,
+              headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
+             body: operation !== 'delete' ? JSON.stringify(formattedFormData) : undefined,
+          });
+
+          if (!response.ok) {
+              const data = await response.json();
+              throw new Error(data.error || 'Operation failed');
+          }
+
+         fetchMatches(1, searchTerm, startDate, endDate);
+          resetForm();
+          setError(null);
+      } catch (error) {
+          setError(error.message);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const resetForm = () => {
+       setFormData({
+      match_id: '',
+      isResult: false,
+      datetime: '',
+      h_id: '',
+      h_title: '',
+      h_short_title: '',
+      a_id: '',
+      a_title: '',
+      a_short_title: '',
+      goals_h: 0,
+      goals_a: 0,
+      xG_h: 0,
+      xG_a: 0,
+      forecast_w: 0,
+      forecast_d: 0,
+      forecast_l: 0,
+      });
+       setSelectedMatch(null);
+  };
+
+  const handleMatchSelect = (match) => {
+       setFormData(match);
+      setSelectedMatch(match);
+  };
+
+  return (
+      <div className={styles.form}>
+          {error && <div className={styles.error}>{error}</div>}
+
+          <div className={styles.operations}>
+               <label>
+                  <input
+                      type="radio"
+                      name="operation"
+                      value="add"
+                      checked={operation === 'add'}
+                     onChange={(e) => {
+                          setOperation(e.target.value);
+                         resetForm();
+                      }}
+                  />
+                  Add
+              </label>
+              <label>
+                  <input
+                      type="radio"
+                      name="operation"
+                      value="update"
+                       checked={operation === 'update'}
+                        onChange={(e) => setOperation(e.target.value)}
+                  />
+                  Update
+              </label>
+              <label>
+                  <input
+                      type="radio"
+                      name="operation"
+                      value="delete"
+                      checked={operation === 'delete'}
+                     onChange={(e) => setOperation(e.target.value)}
+                  />
+                  Delete
+              </label>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+              {operation !== 'delete' && (
+                  <>
+                   {Object.keys(formData).map(key => (
+                          <div className={styles.formGroup} key={key}>
+                              <label>{key.replace('_', ' ').toUpperCase()}:</label>
+                              <input
+                                  type={key === 'isResult' ? 'checkbox' : (typeof formData[key] === 'number' ? 'number' : 'text')}
+                                  step={key.includes('xG') || key.includes('forecast') ? '0.01' : '1'}
+                                  value={key === 'isResult' ? formData[key] : formData[key] }
+                                  checked={key === 'isResult' ? formData[key]: undefined}
+                                 onChange={(e) => setFormData({
+                                      ...formData,
+                                      [key]: key === 'isResult' ? e.target.checked : (typeof formData[key] === 'number' ?
+                                          parseFloat(e.target.value) || 0 :
+                                          e.target.value)
+                                  })}
+                                  required
+                              />
+                          </div>
+                      ))}
+                  </>
+              )}
+              <button type="submit" className={styles.submitButton} disabled={loading}>
+                  {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Match`}
+              </button>
+          </form>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search match..."
+              value={searchTerm}
+              onChange={handleSearch}
+          />
+      <div style={{display: 'flex', gap: '10px', marginBottom:'10px'}}>
+           <input
+              type="date"
+              className={styles.searchInput}
+              placeholder="Start Date"
+              value={startDate}
+              onChange={(e)=>setStartDate(e.target.value)}
+           />
+          <input
+              type="date"
+              className={styles.searchInput}
+              placeholder="End Date"
+               value={endDate}
+               onChange={(e)=> setEndDate(e.target.value)}
+           />
+        </div>
+         <div className={styles.playerListContainer} onScroll={handleScroll} ref={matchListRef}>
+          {matches.map(match => (
+              <div
+                key={match.match_id}
+                className={`${styles.playerItem} ${selectedMatch?.match_id === match.match_id ? styles.selected : ''}`}
+                 onClick={() => handleMatchSelect(match)}
+              >
+                <span>{match.h_title} vs {match.a_title} </span>
+                <span>{match.datetime}</span>
+              </div>
+            ))}
+         {loading && <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>Loading...</div>}
+          </div>
+      </div>
+  );
 }

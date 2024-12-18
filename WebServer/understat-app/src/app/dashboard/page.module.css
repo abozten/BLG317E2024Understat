@@ -1,3 +1,5 @@
+/* Existing styles... */
+
 .dashboard {
     display: flex;
     min-height: 100vh;
@@ -64,21 +66,23 @@
     }
 }
 
-/* Form Styles */
+/* Form layout */
 .form {
-    max-width: 600px;
+    max-width: 500px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .formGroup {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .formGroup input,
 .formGroup select {
     width: 100%;
-    padding: 15px;
+    padding: 12px;
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -102,27 +106,39 @@
     font-weight: 500;
 }
 
+/* Team List */
 .teamList {
     margin-top: 2rem;
-    display: grid;
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
 .teamItem {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
+    padding: 1rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .teamItem:hover {
     transform: translateY(-2px);
     background: rgba(255, 255, 255, 0.08);
+}
+
+.teamItem.selected {
+    background: rgba(74, 144, 226, 0.2);
+    border-color: rgba(74, 144, 226, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
 
 .teamItem span {
@@ -131,131 +147,12 @@
     font-weight: 500;
 }
 
-.buttonGroup {
-    position: relative;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.actionButton {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-}
-
-.editButton {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    background: rgba(74, 144, 226, 0.2);
-}
-
-.editButton:hover {
-    background: rgba(74, 144, 226, 0.4);
-    transform: scale(1.1) rotate(15deg);
-}
-
-.deleteButton {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    background: rgba(255, 59, 48, 0.2);
-}
-
-.deleteButton:hover {
-    background: rgba(255, 59, 48, 0.4);
-    transform: scale(1.1) rotate(-15deg);
-}
-
-.teamItem button {
-    padding: 0.5rem 1rem;
-    margin-left: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.teamItem button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.teamItem button:first-child {
-    background: rgba(74, 144, 226, 0.2);
-}
-
-.teamItem button:last-child {
-    background: rgba(255, 59, 48, 0.2);
-}
-
-.error {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: rgba(255, 59, 48, 0.1);
-    border: 1px solid rgba(255, 59, 48, 0.3);
-    border-radius: 8px;
-    color: #ff3b30;
-}
-
-.submitButton {
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
-}
-
-.submitButton:hover {
-    background: linear-gradient(135deg, #357abd 0%, #2d6aa3 100%);
-    transform: translateY(-1px);
-}
-
-.submitButton:disabled {
-    background: rgba(255, 255, 255, 0.1);
-    cursor: not-allowed;
-}
-
-
+/* Operations (Add, Update, Delete) */
 .operations {
     display: flex;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 30px;
     padding: 4px;
-    margin-bottom: 2rem;
     position: relative;
     width: 300px;
     margin: 0 auto 2rem;
@@ -285,25 +182,124 @@
     background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
     top: 4px;
     left: 4px;
-    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1); /* added transition */
 }
 
-.operations input[value="add"]:checked ~ label[for="add"] {
-    color: #ffffff;
+.operations input[value="add"]:checked ~ .operations::before {
+    transform: translateX(0);
 }
 
-.operations input[value="update"]:checked ~ label[for="update"] {
-    color: #ffffff;
-}
-
-.operations input[value="delete"]:checked ~ label[for="delete"] {
-    color: #ffffff;
-}
-
-.operations input[value="update"]:checked ~ ::before {
+.operations input[value="update"]:checked ~ .operations::before {
     transform: translateX(100%);
 }
 
-.operations input[value="delete"]:checked ~ ::before {
+.operations input[value="delete"]:checked ~ .operations::before {
     transform: translateX(200%);
+}
+
+.operations input:checked + label {
+    color: #ffffff;
+}
+
+/* Submit Button */
+.submitButton {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background: linear-gradient(135deg, #357abd 0%, #2d6aa3 100%);
+    transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.error {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    border-radius: 8px;
+    color: #ff3b30;
+}
+
+.form {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.playerList {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.playerItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px; /* Increased padding for more spacing */
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px; /* Rounded corners for a better look*/
+    cursor: pointer;
+    margin-bottom: 5px; /* added some space at the bottom */
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out; /* animation for smooth hover*/
+}
+
+.playerItem:hover {
+    background: rgba(255, 255, 255, 0.15); /* More visible hover effect */
+    transform: translateY(-2px);
+}
+
+.selected {
+    background: rgba(74, 144, 226, 0.2);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.playerListContainer {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.loadingIndicator {
+    text-align: center;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.loadingAnimation {
+  opacity: 1;
 }

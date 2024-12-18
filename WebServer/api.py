@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, session
+from datetime import datetime
 import pymysql
 from pymysql.cursors import DictCursor
 from flask_cors import CORS
@@ -86,6 +87,28 @@ def get_fut23_players():
     finally:
         connection.close()
 
+
+@app.route('/futplayer/<int:player_id>', methods=['GET'])
+def get_fut_player(player_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("""
+                SELECT `Name`,player_id,Team,team_id,Country,League,Rating,Position,Other_Positions,Run_type,Price,Skill,Weak_foot,Attack_rate,Defense_rate,Pace,Shoot,Pass,Drible,Defense,Physical,Body_type,Height_cm,Weight,Popularity,Base_Stats,In_Game_Stats
+                FROM fut23
+                WHERE player_id = %s
+            """, (player_id,))
+            fut_player = cursor.fetchone()
+            if fut_player is None:
+                return jsonify({'error': 'Player not found in fut23'}), 404
+        return jsonify(fut_player)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
+
 @app.route('/fut23/<team_name>', methods=['GET']) #Deniz'den aldım.
 def get_team_fut23_players(team_name):
     try:
@@ -118,45 +141,53 @@ def get_team_fut23_players(team_name):
 #ARDA
     #Players
   #Read       
+# Update the get_players route to handle pagination and search
 @app.route('/players', methods=['GET'])
 def get_players():
     try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        offset = (page - 1) * limit
+        
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
+            query = """
                 SELECT season_player_id, player_id, player_name, games, time, goals, xG, 
                        assists, xA, shots, key_passes, yellow_cards, red_cards, position, 
                        team_title, npg, npxG, xGChain, xGBuildup, year 
                 FROM players
-                LIMIT 20
-            """)
+                WHERE player_name LIKE %s
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (f'%{search}%', limit, offset))
             players = cursor.fetchall()
         return jsonify(players)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
-
-@app.route('/players/<int:player_id>', methods=['GET'])
-def get_player(player_id):
+@app.route('/player/<int:id>', methods=['GET'])
+def get_player(id):
     try:
         connection = get_db_connection()
-        with connection.cursor() as cursor:
+        with connection.cursor(dictionary=True) as cursor:
             cursor.execute("""
                 SELECT season_player_id, player_id, player_name, games, time, goals, xG, 
                        assists, xA, shots, key_passes, yellow_cards, red_cards, position, 
                        team_title, npg, npxG, xGChain, xGBuildup, year 
-                FROM players 
+                FROM players
                 WHERE player_id = %s
-            """, (player_id,))
+            """, (id,))
             player = cursor.fetchone()
             if player is None:
                 return jsonify({'error': 'Player not found'}), 404
-            return jsonify(player)
+        return jsonify(player)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
+        if connection:
+            connection.close()
 
 @app.route('/addplayer', methods=['POST'])
 def create_player():
@@ -280,12 +311,77 @@ def get_match(id):
     finally:
         connection.close()
 
+
+@app.route('/matches/search', methods=['GET'])
+def get_matches_search():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        start_date = request.args.get('start_date', '')
+        end_date = request.args.get('end_date', '')
+        offset = (page - 1) * limit
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+        with connection.cursor() as cursor:
+           if search and start_date and end_date:
+                cursor.execute(
+                    """
+                    SELECT * FROM matches
+                    WHERE (h_title LIKE %s OR a_title LIKE %s)
+                    AND datetime BETWEEN %s AND %s
+                    ORDER BY datetime DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (f'%{search}%', f'%{search}%', f'{start_date} 00:00:00', f'{end_date} 23:59:59', limit, offset),
+                )
+           elif search:
+                cursor.execute(
+                    """
+                    SELECT * FROM matches
+                    WHERE h_title LIKE %s OR a_title LIKE %s
+                    ORDER BY datetime DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (f'%{search}%', f'%{search}%', limit, offset),
+                )
+           elif start_date and end_date:
+                cursor.execute(
+                    """
+                    SELECT * FROM matches
+                    WHERE datetime BETWEEN %s AND %s
+                    ORDER BY datetime DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                    (f'{start_date} 00:00:00', f'{end_date} 23:59:59', limit, offset),
+                )
+           else:
+                cursor.execute(
+                    """
+                    SELECT * FROM matches
+                    ORDER BY datetime DESC
+                    LIMIT %s OFFSET %s
+                    """,
+                     (limit, offset),
+                )
+           matches = [dict(row) for row in cursor.fetchall()]
+        return jsonify(matches if matches else [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
 @app.route('/matches', methods=['POST'])
 def create_match():
     try:
         data = request.get_json()
         connection = get_db_connection()
         with connection.cursor() as cursor:
+            datetime_str = data['datetime']
+            datetime_obj = datetime.fromisoformat(datetime_str)  # Convert the datetime
+            
             cursor.execute("""
                 INSERT INTO matches (
                     match_id, isResult, datetime, h_id, h_title, h_short_title,
@@ -295,21 +391,22 @@ def create_match():
                 VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
-                RETURNING *
             """, (
-                data['match_id'], data['isResult'], data['datetime'],
+                data['match_id'], data['isResult'], datetime_obj,
                 data['h_id'], data['h_title'], data['h_short_title'],
                 data['a_id'], data['a_title'], data['a_short_title'],
                 data['goals_h'], data['goals_a'], data['xG_h'], data['xG_a'],
                 data['forecast_w'], data['forecast_d'], data['forecast_l']
             ))
-            match = cursor.fetchone()
-            connection.commit()
+            connection.commit() # commit first
+            cursor.execute("SELECT * from matches WHERE match_id = %s", (data['match_id'],)) # then read
+            match = dict(cursor.fetchone()) if cursor.fetchone() else None #convert to dict
         return jsonify(match), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
+         if connection:
+            connection.close()
 
 @app.route('/matches/<int:match_id>', methods=['PUT'])
 def update_match(match_id):
@@ -317,7 +414,9 @@ def update_match(match_id):
         data = request.get_json()
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
+           datetime_str = data['datetime']
+           datetime_obj = datetime.fromisoformat(datetime_str)  # Convert the datetime
+           cursor.execute("""
                 UPDATE matches 
                 SET isResult = %s, 
                     datetime = %s,
@@ -335,15 +434,14 @@ def update_match(match_id):
                     forecast_d = %s,
                     forecast_l = %s
                 WHERE match_id = %s
-                RETURNING *
             """, (
                 data.get('isResult'),
-                data.get('datetime'),
+                datetime_obj, # pass it after format
                 data.get('h_id'),
                 data.get('h_title'),
                 data.get('h_short_title'),
                 data.get('a_id'),
-                data.get('a_title'), 
+                data.get('a_title'),
                 data.get('a_short_title'),
                 data.get('goals_h'),
                 data.get('goals_a'),
@@ -354,32 +452,35 @@ def update_match(match_id):
                 data.get('forecast_l'),
                 match_id
             ))
-            match = cursor.fetchone()
-            if match is None:
-                return jsonify({'error': 'Match not found'}), 404
-            connection.commit()
+           connection.commit()
+           cursor.execute("SELECT * from matches WHERE match_id = %s", (match_id,))
+           match = dict(cursor.fetchone()) if cursor.fetchone() else None
+           if match is None:
+             return jsonify({'error': 'Match not found'}), 404
+
         return jsonify(match)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
+        if connection:
+            connection.close()
+
 
 @app.route('/matches/<int:match_id>', methods=['DELETE'])
 def delete_match(match_id):
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute('DELETE FROM matches WHERE match_id = %s RETURNING match_id', (match_id,))
-            match = cursor.fetchone()
+            cursor.execute('DELETE FROM matches WHERE match_id = %s', (match_id,))
             connection.commit()
-            if match is None:
-                return jsonify({'error': 'Match not found'}), 404
+            if cursor.rowcount == 0:
+                 return jsonify({'error': 'Match not found'}), 404
         return jsonify({'message': f'Match {match_id} deleted successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
-    #Teams
+       if connection:
+            connection.close()    #Teams
 
 @app.route('/teams', methods=['GET'])
 def get_teams():
@@ -519,7 +620,38 @@ def delete_team(team_name):
         return jsonify({'error': str(e)}), 500
     finally:
         connection.close()
-
+@app.route('/teams/standings', methods=['GET'])
+def get_team_standings():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                 SELECT
+                    RANK() OVER (ORDER BY SUM(CASE WHEN h_title = teams.team_name THEN goals_h ELSE goals_a END) DESC) AS ranking,
+                     teams.team_name AS Team,
+                     COUNT(matches.match_id) AS M,
+                     SUM(CASE WHEN (h_title = teams.team_name AND goals_h > goals_a) OR (a_title= teams.team_name AND goals_a > goals_h) THEN 1 ELSE 0 END) AS W,
+                     SUM(CASE WHEN goals_h = goals_a THEN 1 ELSE 0 END) AS D,
+                     SUM(CASE WHEN (h_title = teams.team_name AND goals_h < goals_a) OR (a_title= teams.team_name AND goals_a < goals_h) THEN 1 ELSE 0 END) AS L,
+                      SUM(CASE WHEN h_title = teams.team_name THEN goals_h ELSE goals_a END) AS G,
+                      SUM(CASE WHEN h_title = teams.team_name THEN goals_a ELSE goals_h END) AS GA,
+                     SUM(CASE
+                        WHEN (h_title = teams.team_name AND goals_h > goals_a) OR (a_title= teams.team_name AND goals_a > goals_h) THEN 3
+                        WHEN goals_h = goals_a THEN 1
+                         ELSE 0
+                     END) AS PTS
+                    FROM teams
+                     LEFT JOIN matches ON h_title = teams.team_name OR a_title = teams.team_name
+                   GROUP BY teams.team_name
+                   ORDER BY PTS DESC
+            """)
+            teams = cursor.fetchall()
+        return jsonify(teams)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
 #Authentication
 
 # Hardcoded credentials
