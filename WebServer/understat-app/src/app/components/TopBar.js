@@ -17,7 +17,7 @@ export default function TopBar() {
     <div className={styles.topBar}>
       <div className={styles.searchContainer}>
         <input
-          type="text"
+          type="text" 
           placeholder="Search for Players"
           className={`${styles.searchInput} ${isSearchExpanded ? styles.expanded : ''}`}
           onBlur={handleBlur}
@@ -33,7 +33,7 @@ export default function TopBar() {
         <Link href="/team" className={styles.link}>Teams</Link>
         <Link href="/season" className={styles.link}>Season</Link>
         <Link href="/players" className={styles.link}>Players</Link>
-        <Link href="/" className={styles.homeButton}>Home</Link> {/* Styled Home button */}
+        <Link href="/login" className={styles.link}>Login</Link>
       </div>
     </div>
   );
