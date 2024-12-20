@@ -10,6 +10,16 @@ const TeamTable = () => {
     const [error, setError] = useState(null);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [filters, setFilters] = useState({});
+     const [columnTooltips, setColumnTooltips] = useState({
+        Team: 'Team name',
+        M: 'Matches played',
+        W: 'Matches won',
+        D: 'Matches drawn',
+        L: 'Matches lost',
+        G: 'Goals scored',
+        GA: 'Goals against',
+        PTS: 'Points',
+    });
     const columns = ['Team', 'M', 'W', 'D', 'L', 'G', 'GA', 'PTS'];
     const [allTeamOptions, setAllTeamOptions] = useState([]);
 
@@ -75,7 +85,7 @@ const TeamTable = () => {
         <TopBar />
         <div className={styles.container}>
             <div className={styles.header}>
-                <div className={styles.tableTitle}>Table</div>
+                <div className={styles.tableTitle}>Team Rankings</div>
                  <button onClick={handleFilterClick} className={styles.filterButton}>OPTIONS</button>
               {showFilterModal && <FilterModal
                    columns={columns}
@@ -90,7 +100,9 @@ const TeamTable = () => {
                     <tr>
                           <th className={styles.headerCell}>Nº</th>
                        {columns.map(column => (
-                           <th key={column} className={styles.headerCell}>
+                           <th key={column} className={styles.headerCell}
+                           title={columnTooltips[column]}
+                           >
                               {column}
                            </th>
                             ))}

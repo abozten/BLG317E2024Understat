@@ -585,7 +585,7 @@ def get_team_squad(team_name):
     connection = None
     try:
         connection = get_db_connection()
-        with connection.cursor() as cursor:
+        with connection.cursor() as cursor: # Use dictionary=True here
             cursor.execute("""
                 SELECT DISTINCT
                     p.player_name as name,
@@ -600,17 +600,14 @@ def get_team_squad(team_name):
                     AND p.year = (SELECT MAX(year) FROM players)
                 ORDER BY f.Rating DESC
             """, (team_name,))
-            
-            columns = [desc[0] for desc in cursor.description]
+
             squad = cursor.fetchall()
-            return jsonify([dict(zip(columns, player)) for player in squad])
-            
+            return jsonify(squad)  # Return the list of dictionaries
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
         if connection:
-            connection.close()
-#Team table
+            connection.close()#Team table
 @app.route('/addteam', methods=['POST'])#This works put returns an error 0?
 def create_team():
     try:

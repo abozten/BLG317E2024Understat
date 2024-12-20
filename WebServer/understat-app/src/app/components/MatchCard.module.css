@@ -1,0 +1,33 @@
+.matchCard {
+    background-color: #222; /* Dark card background */
+     border: 1px solid #333;
+   padding: 15px;
+   border-radius: 8px;
+     width: calc(33% - 20px);
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+ .matchCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+ }
+ 
+ .matchInfo {
+     display: flex;
+     flex-direction: column;
+     gap: 8px;
+ }
+ 
+ .matchDate {
+     text-align: center;
+     font-weight: bold;
+    color: #ddd;
+ }
+ 
+ .teams {
+   text-align: center;
+     display: flex;
+     gap: 10px;
+    justify-content: space-around;
+     color: #ddd;
+ }

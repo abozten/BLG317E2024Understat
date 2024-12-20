@@ -1,58 +1,32 @@
 .container {
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: #1a1a1a; /* Dark background */
-  color: #ffffff; /* Light text */
-  font-family: Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: white; /* Text color */
 }
 
-.heading {
-  font-size: 28px;
-  text-align: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #444;
-  padding-bottom: 10px;
+.teamTitle {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white; /* White title color */
 }
 
-.matchGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+.matchesSection,
+.playersSection {
+  margin-bottom: 30px;
 }
 
-.matchCard {
-  background-color: #2b2b2b;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
+.sectionTitle {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    color: #ddd; /* Lighter text for sections */
 }
 
-.date {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 10px;
-}
-
-.teams {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #6ab0f3; /* Accent color */
-}
-
-.score {
-  font-size: 20px;
-  font-weight: bold;
-  color: #ff6347; /* Highlight score */
-  margin-bottom: 10px;
-}
-
-.forecasts {
-  display: flex;
-  justify-content: space-around;
-  font-size: 14px;
-  color: #aaa;
+.matchContainer,
+.playerContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
 }
