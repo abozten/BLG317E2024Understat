@@ -92,7 +92,7 @@ def get_fut23_players():
 def get_fut_player(player_id):
     try:
         connection = get_db_connection()
-        with connection.cursor(dictionary=True) as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT `Name`,player_id,Team,team_id,Country,League,Rating,Position,Other_Positions,Run_type,Price,Skill,Weak_foot,Attack_rate,Defense_rate,Pace,Shoot,Pass,Drible,Defense,Physical,Body_type,Height_cm,Weight,Popularity,Base_Stats,In_Game_Stats
                 FROM fut23
@@ -167,18 +167,27 @@ def get_players():
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
-@app.route('/player/<int:id>', methods=['GET'])
+
+        
+@app.route('/player/<id>', methods=['GET'])
 def get_player(id):
+    connection = None
     try:
         connection = get_db_connection()
-        with connection.cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        with connection.cursor() as cursor:
+            query = """
                 SELECT season_player_id, player_id, player_name, games, time, goals, xG, 
                        assists, xA, shots, key_passes, yellow_cards, red_cards, position, 
                        team_title, npg, npxG, xGChain, xGBuildup, year 
                 FROM players
                 WHERE player_id = %s
-            """, (id,))
+            """
+            # Attempt to convert to integer, if it's not a number, it will be treated as a string
+            if isinstance(id, str) and id.isdigit():
+                cursor.execute(query, (int(id),))
+            else:
+                cursor.execute(query, (id,))
+
             player = cursor.fetchone()
             if player is None:
                 return jsonify({'error': 'Player not found'}), 404
@@ -269,6 +278,11 @@ def get_players_search():
                     placeholders = ', '.join(['%s'] * len(teams))
                     conditions.append(f"team_title IN ({placeholders})")
                     params.extend(teams)
+                elif key == 'position':
+                    positions = value.split(',')
+                    placeholders = ', '.join(['%s'] * len(positions))
+                    conditions.append(f"position IN ({placeholders})")
+                    params.extend(positions)
                 elif key.endswith('_min'):
                     column = key[:-4]
                     try:
@@ -301,8 +315,7 @@ def get_players_search():
         return jsonify({'error': str(e)}), 400
     finally:
         if connection:
-            connection.close()
-            
+            connection.close()           
 @app.route('/players/<int:player_id>', methods=['DELETE'])
 def delete_player(player_id):
     try:
@@ -584,10 +597,11 @@ def get_team(team_name):
 def get_team_squad(team_name):
     connection = None
     try:
-        connection = get_db_connection()
-        with connection.cursor() as cursor: # Use dictionary=True here
+         connection = get_db_connection()
+         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT DISTINCT
+                 SELECT
+                    p.player_id as player_id,
                     p.player_name as name,
                     f.Position as position, 
                     f.Rating as rating,
@@ -595,20 +609,24 @@ def get_team_squad(team_name):
                     p.goals,
                     p.assists
                 FROM players p
-                JOIN fut23 f ON p.player_name = f.Name
+                LEFT JOIN fut23 f ON p.player_name = f.Name
                 WHERE p.team_title = %s
                     AND p.year = (SELECT MAX(year) FROM players)
                 ORDER BY f.Rating DESC
             """, (team_name,))
-
             squad = cursor.fetchall()
-            return jsonify(squad)  # Return the list of dictionaries
+
+            #Filter the players that don't have a record in fut23
+            filtered_squad = [player for player in squad if player['position'] is not None]
+            return jsonify(filtered_squad)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+         return jsonify({'error': str(e)}), 500
     finally:
         if connection:
-            connection.close()#Team table
-@app.route('/addteam', methods=['POST'])#This works put returns an error 0?
+             connection.close()
+
+            #Team table
+@app.route('/addteam', methods=['POST'])#This works but returns an error 0?
 def create_team():
     try:
         team_data = request.get_json()

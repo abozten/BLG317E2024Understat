@@ -1,64 +1,83 @@
 'use client';
+import React, { useState, useEffect } from 'react';
+import styles from './page.module.css';
+import MatchCard from '../../components/MatchCard';
+import PlayerCard from '../../components/PlayerCard';
+import { useParams } from 'next/navigation';
 
-import React, { useEffect, useState } from "react";
-import styles from "./page.module.css";
+const TeamPage = () => {
+    const params = useParams();
+    const teamname = decodeURIComponent(params.teamname);
 
-export default function MatchStatistics() {
-  const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
+    const [matches, setMatches] = useState([]);
+    const [players, setPlayers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchMatches() {
-      try {
-        setLoading(true);
 
-        // Fetch matches from backend
-        const response = await fetch("https://localhost:5001/matches"); // Update to match your API URL
-        if (!response.ok) {
-          throw new Error(`Failed to fetch matches: ${response.status}`);
-        }
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                console.log("Fetching squad data for team:", teamname); // Log before fetch
+               const teamData = await fetch(`https://localhost:5001/team/${teamname}/squad`);
+                    console.log("Team Data Response:", teamData); // Log the raw response object
+                   if (!teamData.ok) {
+                       throw new Error(`HTTP error! Status: ${teamData.status}`);
+                   }
+                  const squad = await teamData.json();
+                  console.log("Parsed Squad Data:", squad);  // Log parsed JSON data
+                setPlayers(squad);
+                  const matchesData = await fetch(`https://localhost:5001/team/${teamname}`);
+                     if (!matchesData.ok) {
+                         throw new Error(`HTTP error! Status: ${matchesData.status}`);
+                     }
+                   const matches = await matchesData.json();
+                   setMatches(matches || []);
 
-        const matchData = await response.json();
-        setMatches(matchData || []);
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch team data:", error);
+                setError('Failed to fetch team data');
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [teamname]);
 
-    fetchMatches();
-  }, []);
 
-  if (loading) {
-    return <div className={styles.container}>Loading...</div>;
-  }
+   if (loading) {
+      return <div>Loading...</div>;
+   }
+   if (error) {
+       return <div style={{color:"red"}}>Error: {error}</div>;
+   }
 
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.heading}>Match Statistics</h1>
 
-      {/* Matches Section */}
-      <div className={styles.matchGrid}>
-        {matches.map((match) => (
-          <div key={match.match_id} className={styles.matchCard}>
-            <p className={styles.date}>
-              {new Date(match.datetime).toLocaleString()} {/* Format the date */}
-            </p>
-            <p className={styles.teams}>
-              {match.h_title} ({match.h_short_title}) vs {match.a_title} ({match.a_short_title})
-            </p>
-            <p className={styles.score}>
-              {match.goals_h} - {match.goals_a} {/* Display the score */}
-            </p>
-            <div className={styles.forecasts}>
-              <span>Win: {match.forecast_w.toFixed(2)}</span>
-              <span>Draw: {match.forecast_d.toFixed(2)}</span>
-              <span>Loss: {match.forecast_l.toFixed(2)}</span>
+   return (
+       <div className={styles.container}>
+            <h1 className={styles.teamTitle}>{teamname}</h1>
+            <div className={styles.matchesSection}>
+              <h2 className={styles.sectionTitle}>Latest 10 Matches</h2>
+              {matches.length > 0 ? (
+                 <div className={styles.matchContainer}>
+                  {matches.map((match, index) => (
+                    <MatchCard key={index} match={match} />
+                  ))}
+                 </div>
+                ) : (<p>No matches found</p>)}
             </div>
+         <div className={styles.playersSection}>
+           <h2 className={styles.sectionTitle}>Squad</h2>
+            {players.length > 0 ? (
+                <div className={styles.playerContainer}>
+                {players.map((player, index) => {
+                    console.log("Player Object:", player);
+                    return <PlayerCard key={index} player={player} />;
+                })}
+               </div>
+              ) : (<p>No players found</p>)}
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+       </div>
+   );
+};
+export default TeamPage;

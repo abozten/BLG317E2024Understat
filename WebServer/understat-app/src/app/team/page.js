@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import FilterModal from '../components/FilterModal';
-import TopBar from '../components/TopBar'; // Import TopBar
+import TopBar from '../components/TopBar';
+import Link from 'next/link'; // Import Link
 
 const TeamTable = () => {
     const [teams, setTeams] = useState([]);
@@ -114,7 +115,13 @@ const TeamTable = () => {
                         <td className={styles.cell}>{index+1}</td>
                           {columns.map((column) => (
                             <td key={column} className={styles.cell}>
-                               {team[column]}
+                                {column === 'Team' ? (
+                                  <Link href={`/teams/${team[column]}`} style={{color: 'white', textDecoration: 'none', display: 'block' }}>
+                                        {team[column]}
+                                  </Link>
+                                ) : (
+                                  team[column]
+                                )}
                              </td>
                             ))}
                        </tr>
