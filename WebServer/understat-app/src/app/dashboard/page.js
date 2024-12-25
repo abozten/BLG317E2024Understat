@@ -540,13 +540,13 @@ function PlayerForm() {
                       ...formData,
                       [key]:
                         typeof formData[key] === 'number'
-                          ? parseFloat(e.target.value) || 0
+                          ? parseFloat(e.target.value) >= 0 ? parseFloat(e.target.value) : 0 // Prevent negative
                           : e.target.value,
                     })
                   }
                   required
-                />
-              </div>
+                  min={key !== 'year' ? "0" : "2000"} // Prevent negative for stats, set min for year
+                />              </div>
             ))}
           </>
         )}

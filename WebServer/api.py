@@ -223,7 +223,7 @@ def create_player():
     finally:
         connection.close()
 
-@app.route('/players/<int:player_id>', methods=['PUT'])
+@app.route('/player/<int:player_id>', methods=['PUT'])
 def update_player(player_id):
     try:
         data = request.get_json()
@@ -231,19 +231,26 @@ def update_player(player_id):
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE players 
-                SET games = %s, time = %s, goals = %s, xG = %s, assists = %s, xA = %s,
-                    shots = %s, key_passes = %s, yellow_cards = %s, red_cards = %s,
-                    npg = %s, npxG = %s, xGChain = %s, xGBuildup = %s
+                SET player_name = %s, games = %s, time = %s, goals = %s, xG = %s, assists = %s, xA = %s,
+                    shots = %s, key_passes = %s, yellow_cards = %s, red_cards = %s, position = %s,
+                    team_title = %s, npg = %s, npxG = %s, xGChain = %s, xGBuildup = %s, year = %s
                 WHERE player_id = %s
-            """, (data.get('games'), data.get('time'), data.get('goals'), 
+            """, (data.get('player_name'), data.get('games'), data.get('time'), data.get('goals'), 
                  data.get('xG'), data.get('assists'), data.get('xA'),
                  data.get('shots'), data.get('key_passes'), data.get('yellow_cards'),
-                 data.get('red_cards'), data.get('npg'), data.get('npxG'),
-                 data.get('xGChain'), data.get('xGBuildup'), player_id))
+                 data.get('red_cards'), data.get('position'), data.get('team_title'),
+                 data.get('npg'), data.get('npxG'), data.get('xGChain'), 
+                 data.get('xGBuildup'), data.get('year'), player_id))
             connection.commit()
             if cursor.rowcount == 0:
                 return jsonify({'error': 'Player not found'}), 404
-        return jsonify({'message': 'Player updated successfully'})
+            
+            # Fetch and return the updated player data
+            cursor.execute("""
+                SELECT * FROM players WHERE player_id = %s
+            """, (player_id,))
+            updated_player = cursor.fetchone()
+        return jsonify(updated_player)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
@@ -316,7 +323,7 @@ def get_players_search():
     finally:
         if connection:
             connection.close()           
-@app.route('/players/<int:player_id>', methods=['DELETE'])
+@app.route('/player/<int:player_id>', methods=['DELETE'])
 def delete_player(player_id):
     try:
         connection = get_db_connection()
