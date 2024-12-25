@@ -109,6 +109,36 @@ function TeamForm() {
     useEffect(() => {
         fetchTeams();
     }, []);
+    
+    useEffect(() => {
+      const operationsElement = document.querySelector(`.${styles.operations}`);
+      const radioButtons = document.querySelectorAll(`.${styles.operations} input[type="radio"]`);
+
+      const updateDialPosition = () => {
+          const checkedRadioButton = document.querySelector(`.${styles.operations} input[type="radio"]:checked`);
+          if (operationsElement && checkedRadioButton) {
+              if (checkedRadioButton.value === 'add') {
+                  operationsElement.style.setProperty('--dial-translate-x', '0%');
+              } else if (checkedRadioButton.value === 'update') {
+                  operationsElement.style.setProperty('--dial-translate-x', '100%');
+              } else if (checkedRadioButton.value === 'delete') {
+                  operationsElement.style.setProperty('--dial-translate-x', '200%');
+              }
+          }
+      };
+
+      radioButtons.forEach(radio => {
+          radio.addEventListener('change', updateDialPosition);
+      });
+
+      updateDialPosition(); // Initial call to set the correct position
+
+      return () => {
+          radioButtons.forEach(radio => {
+              radio.removeEventListener('change', updateDialPosition);
+          });
+      };
+  }, []); // Empty dependency array ensures this runs only on mount and unmount
 
     const fetchTeams = async () => {
         try {
@@ -295,6 +325,35 @@ function PlayerForm() {
 
   const playerListRef = useRef(null);
 
+  useEffect(() => {
+    const operationsElement = document.querySelector(`.${styles.operations}`);
+    const radioButtons = document.querySelectorAll(`.${styles.operations} input[type="radio"]`);
+
+    const updateDialPosition = () => {
+        const checkedRadioButton = document.querySelector(`.${styles.operations} input[type="radio"]:checked`);
+        if (operationsElement && checkedRadioButton) {
+            if (checkedRadioButton.value === 'add') {
+                operationsElement.style.setProperty('--dial-translate-x', '0%');
+            } else if (checkedRadioButton.value === 'update') {
+                operationsElement.style.setProperty('--dial-translate-x', '100%');
+            } else if (checkedRadioButton.value === 'delete') {
+                operationsElement.style.setProperty('--dial-translate-x', '200%');
+            }
+        }
+    };
+
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', updateDialPosition);
+    });
+
+    updateDialPosition(); // Initial call to set the correct position
+
+    return () => {
+        radioButtons.forEach(radio => {
+            radio.removeEventListener('change', updateDialPosition);
+        });
+    };
+}, []);
   // Update fetchPlayers function
   const fetchPlayers = async (pageNum = 1, search = '') => {
     try {
@@ -560,6 +619,35 @@ function MatchForm() {
   const MATCHES_PER_PAGE = 20;
 
   const matchListRef = useRef(null);
+  useEffect(() => {
+    const operationsElement = document.querySelector(`.${styles.operations}`);
+    const radioButtons = document.querySelectorAll(`.${styles.operations} input[type="radio"]`);
+
+    const updateDialPosition = () => {
+        const checkedRadioButton = document.querySelector(`.${styles.operations} input[type="radio"]:checked`);
+        if (operationsElement && checkedRadioButton) {
+            if (checkedRadioButton.value === 'add') {
+                operationsElement.style.setProperty('--dial-translate-x', '0%');
+            } else if (checkedRadioButton.value === 'update') {
+                operationsElement.style.setProperty('--dial-translate-x', '100%');
+            } else if (checkedRadioButton.value === 'delete') {
+                operationsElement.style.setProperty('--dial-translate-x', '200%');
+            }
+        }
+    };
+
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', updateDialPosition);
+    });
+
+    updateDialPosition(); // Initial call to set the correct position
+
+    return () => {
+        radioButtons.forEach(radio => {
+            radio.removeEventListener('change', updateDialPosition);
+        });
+    };
+}, []);
 
   // Update fetchMatches function
   const fetchMatches = async (pageNum = 1, search = '', startDate = '', endDate = '') => {

@@ -1,4 +1,3 @@
-/* Existing styles... */
 
 .dashboard {
     display: flex;
@@ -156,6 +155,20 @@
     position: relative;
     width: 300px;
     margin: 0 auto 2rem;
+    --dial-translate-x: 0%; /* Default value */
+}
+
+.operations::before {
+    content: '';
+    position: absolute;
+    width: calc(100% / 3 - 2px); /* Slightly reduce the width */
+    height: calc(100% - 8px);
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transform: translateX(var(--dial-translate-x));
 }
 
 .operations label {
@@ -173,29 +186,6 @@
     display: none;
 }
 
-.operations::before {
-    content: '';
-    position: absolute;
-    width: calc(100% / 3);
-    height: calc(100% - 8px);
-    border-radius: 25px;
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-    top: 4px;
-    left: 4px;
-    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1); /* added transition */
-}
-
-.operations input[value="add"]:checked ~ .operations::before {
-    transform: translateX(0);
-}
-
-.operations input[value="update"]:checked ~ .operations::before {
-    transform: translateX(100%);
-}
-
-.operations input[value="delete"]:checked ~ .operations::before {
-    transform: translateX(200%);
-}
 
 .operations input:checked + label {
     color: #ffffff;
@@ -302,4 +292,57 @@
 
 .loadingAnimation {
   opacity: 1;
+}
+
+
+
+.operations {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 4px;
+    /* position: relative;  No need for relative here */
+    width: 300px;
+    margin: 0 auto 2rem;
+}
+
+.operationLabel {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    color: #ffffff;
+    position: relative; /* Needed for absolute positioning of indicator */
+    z-index: 1;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.operations input[type="radio"] {
+    display: none;
+}
+
+.indicator {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 0; /* Start at the beginning */
+    bottom: 4px;
+    width: 100%;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transform: translateX(0); /* Default position */
+}
+
+/* Move the indicator based on which radio button in the label is checked */
+.operationLabel:nth-child(1) input:checked + .indicator {
+    transform: translateX(0%);
+}
+
+.operationLabel:nth-child(2) input:checked + .indicator {
+    transform: translateX(100%);
+}
+
+.operationLabel:nth-child(3) input:checked + .indicator {
+    transform: translateX(200%);
 }
