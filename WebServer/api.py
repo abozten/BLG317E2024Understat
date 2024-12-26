@@ -458,13 +458,14 @@ def get_matches_search():
 
 @app.route('/matches', methods=['POST'])
 def create_match():
+    connection = None  # Initialize connection outside the try block
     try:
         data = request.get_json()
         connection = get_db_connection()
         with connection.cursor() as cursor:
             datetime_str = data['datetime']
-            datetime_obj = datetime.fromisoformat(datetime_str)  # Convert the datetime
-            
+            datetime_obj = datetime.fromisoformat(datetime_str)
+
             cursor.execute("""
                 INSERT INTO matches (
                     match_id, isResult, datetime, h_id, h_title, h_short_title,
@@ -481,14 +482,15 @@ def create_match():
                 data['goals_h'], data['goals_a'], data['xG_h'], data['xG_a'],
                 data['forecast_w'], data['forecast_d'], data['forecast_l']
             ))
-            connection.commit() # commit first
-            cursor.execute("SELECT * from matches WHERE match_id = %s", (data['match_id'],)) # then read
-            match = dict(cursor.fetchone()) if cursor.fetchone() else None #convert to dict
+            connection.commit()
+            cursor.execute("SELECT * from matches WHERE match_id = %s", (data['match_id'],))
+            result = cursor.fetchone()
+            match = dict(result) if result else None  # Check if result is not None
         return jsonify(match), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-         if connection:
+        if connection:
             connection.close()
 
 @app.route('/matches/<int:match_id>', methods=['PUT'])
@@ -537,7 +539,8 @@ def update_match(match_id):
             ))
            connection.commit()
            cursor.execute("SELECT * from matches WHERE match_id = %s", (match_id,))
-           match = dict(cursor.fetchone()) if cursor.fetchone() else None
+           result = cursor.fetchone()
+           match = dict(result) if result else None
            if match is None:
              return jsonify({'error': 'Match not found'}), 404
 

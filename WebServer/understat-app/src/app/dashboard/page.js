@@ -584,323 +584,326 @@ function PlayerForm() {
 
 
 function MatchForm() {
-  const [matches, setMatches] = useState([]);
-  const [formData, setFormData] = useState({
-      match_id: '',
-      isResult: false,
-      datetime: '',
-      h_id: '',
-      h_title: '',
-      h_short_title: '',
-      a_id: '',
-      a_title: '',
-      a_short_title: '',
-      goals_h: 0,
-      goals_a: 0,
-      xG_h: 0,
-      xG_a: 0,
-      forecast_w: 0,
-      forecast_d: 0,
-      forecast_l: 0,
-  });
-  const [operation, setOperation] = useState('add');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [selectedMatch, setSelectedMatch] = useState(null);
-
-  // Add these state variables
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(null);
-  const [scrollTimeout, setScrollTimeout] = useState(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const MATCHES_PER_PAGE = 20;
-
-  const matchListRef = useRef(null);
-  useEffect(() => {
-    const operationsElement = document.querySelector(`.${styles.operations}`);
-    const radioButtons = document.querySelectorAll(`.${styles.operations} input[type="radio"]`);
-
-    const updateDialPosition = () => {
-        const checkedRadioButton = document.querySelector(`.${styles.operations} input[type="radio"]:checked`);
-        if (operationsElement && checkedRadioButton) {
-            if (checkedRadioButton.value === 'add') {
-                operationsElement.style.setProperty('--dial-translate-x', '0%');
-            } else if (checkedRadioButton.value === 'update') {
-                operationsElement.style.setProperty('--dial-translate-x', '100%');
-            } else if (checkedRadioButton.value === 'delete') {
-                operationsElement.style.setProperty('--dial-translate-x', '200%');
+    const [matches, setMatches] = useState([]);
+    const [formData, setFormData] = useState({
+        match_id: '',
+        isResult: false,
+        datetime: '',
+        h_id: '',
+        h_title: '',
+        h_short_title: '',
+        a_id: '',
+        a_title: '',
+        a_short_title: '',
+        goals_h: 0,
+        goals_a: 0,
+        xG_h: 0,
+        xG_a: 0,
+        forecast_w: 0,
+        forecast_d: 0,
+        forecast_l: 0,
+    });
+    const [operation, setOperation] = useState('add');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [selectedMatch, setSelectedMatch] = useState(null);
+  
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTimeout, setSearchTimeout] = useState(null);
+    const [scrollTimeout, setScrollTimeout] = useState(null);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const MATCHES_PER_PAGE = 20;
+  
+    const matchListRef = useRef(null);
+    useEffect(() => {
+      const operationsElement = document.querySelector(`.${styles.operations}`);
+      const radioButtons = document.querySelectorAll(`.${styles.operations} input[type="radio"]`);
+  
+      const updateDialPosition = () => {
+          const checkedRadioButton = document.querySelector(`.${styles.operations} input[type="radio"]:checked`);
+          if (operationsElement && checkedRadioButton) {
+              if (checkedRadioButton.value === 'add') {
+                  operationsElement.style.setProperty('--dial-translate-x', '0%');
+              } else if (checkedRadioButton.value === 'update') {
+                  operationsElement.style.setProperty('--dial-translate-x', '100%');
+              } else if (checkedRadioButton.value === 'delete') {
+                  operationsElement.style.setProperty('--dial-translate-x', '200%');
+              }
+          }
+      };
+  
+      radioButtons.forEach(radio => {
+          radio.addEventListener('change', updateDialPosition);
+      });
+  
+      updateDialPosition();
+  
+      return () => {
+          radioButtons.forEach(radio => {
+              radio.removeEventListener('change', updateDialPosition);
+          });
+      };
+  }, [styles.operations]);
+  
+    const fetchMatches = async (pageNum = 1, search = '', startDate = '', endDate = '') => {
+        try {
+            setLoading(true);
+            let url = `https://localhost:5001/matches/search?page=${pageNum}&search=${search}&limit=${MATCHES_PER_PAGE}`;
+            if(startDate) {
+                url+= `&start_date=${startDate}`;
             }
+            if(endDate){
+                url+=`&end_date=${endDate}`;
+            }
+  
+          const response = await fetch(url);
+  
+             if (!response.ok) {
+                const message = `An error has occurred: ${response.status}`;
+                throw new Error(message);
+              }
+  
+             const data = await response.json();
+             if(Array.isArray(data)){
+                 if (pageNum === 1) {
+                     setMatches(data);
+                 } else {
+                     setMatches(prev => [...prev, ...data]);
+                 }
+  
+                 setHasMore(data.length === MATCHES_PER_PAGE);
+             }else {
+                 setMatches([])
+                 setHasMore(false)
+             }
+            setLoading(false);
+        } catch (error) {
+            setError('Failed to fetch matches: ' + error.message);
+            setLoading(false);
         }
     };
-
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', updateDialPosition);
-    });
-
-    updateDialPosition(); // Initial call to set the correct position
-
-    return () => {
-        radioButtons.forEach(radio => {
-            radio.removeEventListener('change', updateDialPosition);
-        });
+  
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+  
+        if (searchTimeout) clearTimeout(searchTimeout);
+  
+        const timeoutId = setTimeout(() => {
+            setPage(1);
+             fetchMatches(1, value, startDate, endDate);
+        }, 500);
+  
+        setSearchTimeout(timeoutId);
     };
-}, []);
-
-  // Update fetchMatches function
-  const fetchMatches = async (pageNum = 1, search = '', startDate = '', endDate = '') => {
-      try {
-          setLoading(true);
-          let url = `https://localhost:5001/matches/search?page=${pageNum}&search=${search}&limit=${MATCHES_PER_PAGE}`;
-          if(startDate) {
-              url+= `&start_date=${startDate}`;
-          }
-          if(endDate){
-              url+=`&end_date=${endDate}`;
-          }
-
-        const response = await fetch(url);
-
-
-           const data = await response.json();
-           if(Array.isArray(data)){
-               if (pageNum === 1) {
-                   setMatches(data);
-               } else {
-                   setMatches(prev => [...prev, ...data]);
-               }
-
-               setHasMore(data.length === MATCHES_PER_PAGE);
-           }else {
-               setMatches([])
-               setHasMore(false)
-
-           }
-          setLoading(false);
-      } catch (error) {
-          setError('Failed to fetch matches');
-          setLoading(false);
-      }
-  };
-
-  // Add search handler
-  const handleSearch = (e) => {
-      const value = e.target.value;
-      setSearchTerm(value);
-
-      // Clear existing timeout
-      if (searchTimeout) clearTimeout(searchTimeout);
-
-      // Set new timeout for debouncing
-      const timeoutId = setTimeout(() => {
-          setPage(1);
-           fetchMatches(1, value, startDate, endDate);
-      }, 500);
-
-      setSearchTimeout(timeoutId);
-  };
-
-
-  // Add infinite scroll handler
- const handleScroll = () => {
-      if (!matchListRef.current) return;
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-    setScrollTimeout(
-        setTimeout(() => {
-          const { scrollTop, clientHeight, scrollHeight } = matchListRef.current;
-          if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
-            setPage((prev) => prev + 1);
-            fetchMatches(page + 1, searchTerm, startDate, endDate);
-          }
-         }, 200)
-      )
- }
-
-
-// Update useEffect
-useEffect(() => {
-    fetchMatches(1, searchTerm, startDate, endDate);
-}, []);
-
-
-  const handleSubmit = async (e) => {
-      e.preventDefault();
-      setLoading(true);
-      try {
-          let url, method;
-           switch (operation) {
-              case 'add':
-                  url = 'https://localhost:5001/matches';
-                  method = 'POST';
-                  break;
-              case 'update':
-                url = `https://localhost:5001/matches/${formData.match_id}`;
-                  method = 'PUT';
-                  break;
-              case 'delete':
+  
+    const handleScroll = () => {
+        if (!matchListRef.current) return;
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+      setScrollTimeout(
+          setTimeout(() => {
+            const { scrollTop, clientHeight, scrollHeight } = matchListRef.current;
+            if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
+              setPage((prev) => prev + 1);
+              fetchMatches(page + 1, searchTerm, startDate, endDate);
+            }
+           }, 200)
+        )
+   }
+  
+  useEffect(() => {
+      fetchMatches(1, searchTerm, startDate, endDate);
+  }, [searchTerm, startDate, endDate]);
+  
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            let url, method;
+             switch (operation) {
+                case 'add':
+                    url = 'https://localhost:5001/matches';
+                    method = 'POST';
+                    break;
+                case 'update':
                   url = `https://localhost:5001/matches/${formData.match_id}`;
-                  method = 'DELETE';
-                  break;
-          }
-         const formattedFormData = {
-             ...formData,
-             datetime: formData.datetime ? new Date(formData.datetime).toISOString() : null
-         };
-
-
-          const response = await fetch(url, {
-              method,
-              headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
-             body: operation !== 'delete' ? JSON.stringify(formattedFormData) : undefined,
-          });
-
-          if (!response.ok) {
-              const data = await response.json();
-              throw new Error(data.error || 'Operation failed');
-          }
-
-         fetchMatches(1, searchTerm, startDate, endDate);
-          resetForm();
-          setError(null);
-      } catch (error) {
-          setError(error.message);
-      } finally {
-          setLoading(false);
-      }
-  };
-
-  const resetForm = () => {
-       setFormData({
-      match_id: '',
-      isResult: false,
-      datetime: '',
-      h_id: '',
-      h_title: '',
-      h_short_title: '',
-      a_id: '',
-      a_title: '',
-      a_short_title: '',
-      goals_h: 0,
-      goals_a: 0,
-      xG_h: 0,
-      xG_a: 0,
-      forecast_w: 0,
-      forecast_d: 0,
-      forecast_l: 0,
-      });
-       setSelectedMatch(null);
-  };
-
-  const handleMatchSelect = (match) => {
-       setFormData(match);
-      setSelectedMatch(match);
-  };
-
-  return (
-      <div className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
-
-          <div className={styles.operations}>
-               <label>
-                  <input
-                      type="radio"
-                      name="operation"
-                      value="add"
-                      checked={operation === 'add'}
-                     onChange={(e) => {
-                          setOperation(e.target.value);
-                         resetForm();
-                      }}
-                  />
-                  Add
-              </label>
-              <label>
-                  <input
-                      type="radio"
-                      name="operation"
-                      value="update"
-                       checked={operation === 'update'}
-                        onChange={(e) => setOperation(e.target.value)}
-                  />
-                  Update
-              </label>
-              <label>
-                  <input
-                      type="radio"
-                      name="operation"
-                      value="delete"
-                      checked={operation === 'delete'}
-                     onChange={(e) => setOperation(e.target.value)}
-                  />
-                  Delete
-              </label>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-              {operation !== 'delete' && (
-                  <>
-                   {Object.keys(formData).map(key => (
-                          <div className={styles.formGroup} key={key}>
-                              <label>{key.replace('_', ' ').toUpperCase()}:</label>
-                              <input
-                                  type={key === 'isResult' ? 'checkbox' : (typeof formData[key] === 'number' ? 'number' : 'text')}
-                                  step={key.includes('xG') || key.includes('forecast') ? '0.01' : '1'}
-                                  value={key === 'isResult' ? formData[key] : formData[key] }
-                                  checked={key === 'isResult' ? formData[key]: undefined}
-                                 onChange={(e) => setFormData({
-                                      ...formData,
-                                      [key]: key === 'isResult' ? e.target.checked : (typeof formData[key] === 'number' ?
-                                          parseFloat(e.target.value) || 0 :
-                                          e.target.value)
-                                  })}
-                                  required
-                              />
-                          </div>
-                      ))}
-                  </>
-              )}
-              <button type="submit" className={styles.submitButton} disabled={loading}>
-                  {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Match`}
-              </button>
-          </form>
+                    method = 'PUT';
+                    break;
+                case 'delete':
+                    url = `https://localhost:5001/matches/${formData.match_id}`;
+                    method = 'DELETE';
+                    break;
+            }
+           const formattedFormData = {
+               ...formData,
+               datetime: formData.datetime ? new Date(formData.datetime).toISOString() : null
+           };
+  
+            const response = await fetch(url, {
+                method,
+                headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
+               body: operation !== 'delete' ? JSON.stringify(formattedFormData) : undefined,
+            });
+  
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Operation failed');
+            }
+  
+           fetchMatches(1, searchTerm, startDate, endDate);
+            resetForm();
+            setError(null);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+  
+    const resetForm = () => {
+         setFormData({
+        match_id: '',
+        isResult: false,
+        datetime: '',
+        h_id: '',
+        h_title: '',
+        h_short_title: '',
+        a_id: '',
+        a_title: '',
+        a_short_title: '',
+        goals_h: 0,
+        goals_a: 0,
+        xG_h: 0,
+        xG_a: 0,
+        forecast_w: 0,
+        forecast_d: 0,
+        forecast_l: 0,
+        });
+         setSelectedMatch(null);
+    };
+  
+    const handleMatchSelect = (match) => {
+        const formattedDate = match.datetime ? new Date(match.datetime).toISOString().slice(0, 19) : '';
+        setFormData({...match, datetime: formattedDate});
+        setSelectedMatch(match);
+      };
+  
+    return (
+        <div className={styles.form}>
+            {error && <div className={styles.error}>{error}</div>}
+  
+            <div className={styles.operations}>
+                 <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="add"
+                        checked={operation === 'add'}
+                       onChange={(e) => {
+                            setOperation(e.target.value);
+                           resetForm();
+                        }}
+                    />
+                    Add
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="update"
+                         checked={operation === 'update'}
+                          onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Update
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="delete"
+                        checked={operation === 'delete'}
+                       onChange={(e) => setOperation(e.target.value)}
+                    />
+                    Delete
+                </label>
+            </div>
+  
+            <form onSubmit={handleSubmit}>
+                {operation !== 'delete' && (
+                    <>
+{Object.keys(formData).map(key => (
+    <div className={styles.formGroup} key={key}>
+        <label>{key.replace('_', ' ').toUpperCase()}:</label>
+        {key === 'datetime' ? (
             <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="Search match..."
-              value={searchTerm}
-              onChange={handleSearch}
-          />
-      <div style={{display: 'flex', gap: '10px', marginBottom:'10px'}}>
-           <input
-              type="date"
-              className={styles.searchInput}
-              placeholder="Start Date"
-              value={startDate}
-              onChange={(e)=>setStartDate(e.target.value)}
-           />
-          <input
-              type="date"
-              className={styles.searchInput}
-              placeholder="End Date"
-               value={endDate}
-               onChange={(e)=> setEndDate(e.target.value)}
-           />
-        </div>
-         <div className={styles.playerListContainer} onScroll={handleScroll} ref={matchListRef}>
-          {matches.map(match => (
-              <div
-                key={match.match_id}
-                className={`${styles.playerItem} ${selectedMatch?.match_id === match.match_id ? styles.selected : ''}`}
-                 onClick={() => handleMatchSelect(match)}
-              >
-                <span>{match.h_title} vs {match.a_title} </span>
-                <span>{match.datetime}</span>
-              </div>
-            ))}
-         {loading && <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>Loading...</div>}
+                type="datetime-local"
+                value={formData.datetime}
+                onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
+                required
+            />
+        ) : (
+            <input
+                type={key === 'isResult' ? 'checkbox' : (typeof formData[key] === 'number' && !['h_title', 'h_short_title', 'a_title', 'a_short_title'].includes(key)) ? 'number' : 'text'}
+                step={key.includes('xG') || key.includes('forecast') ? '0.000001' : 'any'}
+                value={key === 'isResult' ? formData[key] : formData[key]}
+                checked={key === 'isResult' ? formData[key] : undefined}
+                onChange={(e) => setFormData({
+                    ...formData,
+                    [key]: key === 'isResult' ? e.target.checked : (typeof formData[key] === 'number' && !['h_title', 'h_short_title', 'a_title', 'a_short_title'].includes(key) ?
+                        Math.max(0, parseFloat(e.target.value)) || 0 :
+                        e.target.value)
+                })}
+                required
+                min={typeof formData[key] === 'number' && !['h_title', 'h_short_title', 'a_title', 'a_short_title'].includes(key) ? "0" : undefined}
+            />
+        )}
+    </div>
+))}
+                    </>
+                )}
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading ? 'Processing...' : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Match`}
+                </button>
+            </form>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search match..."
+                value={searchTerm}
+                onChange={handleSearch}
+            />
+        <div style={{display: 'flex', gap: '10px', marginBottom:'10px'}}>
+             <input
+                type="date"
+                className={styles.searchInput}
+                placeholder="Start Date"
+                value={startDate}
+                onChange={(e)=>setStartDate(e.target.value)}
+             />
+            <input
+                type="date"
+                className={styles.searchInput}
+                placeholder="End Date"
+                 value={endDate}
+                 onChange={(e)=> setEndDate(e.target.value)}
+             />
           </div>
-      </div>
-  );
-}
+           <div className={styles.playerListContainer} onScroll={handleScroll} ref={matchListRef}>
+            {matches.map(match => (
+                <div
+                  key={match.match_id}
+                  className={`${styles.playerItem} ${selectedMatch?.match_id === match.match_id ? styles.selected : ''}`}
+                   onClick={() => handleMatchSelect(match)}
+                >
+                  <span>{match.h_title} vs {match.a_title} </span>
+                  <span>{match.datetime}</span>
+                </div>
+              ))}
+           {loading && <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>Loading...</div>}
+            </div>
+        </div>
+    );
+  }
