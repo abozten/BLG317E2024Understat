@@ -5,16 +5,7 @@
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
 }
 
-.sidebar {
-    width: 250px;
-    background: rgba(34, 34, 34, 0.95);
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
+
 
 .sidebar button {
     width: 100%;
@@ -346,3 +337,51 @@
 .operationLabel:nth-child(3) input:checked + .indicator {
     transform: translateX(200%);
 }
+
+.sidebar {
+    width: 250px;
+    background: rgba(34, 34, 34, 0.95);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
+.logoutButton, .homeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 1rem;
+    width: 40px; /* Set a fixed width */
+    height: 40px; /* Set a fixed height */
+    
+}
+
+.logoutButton:hover, .homeButton:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px;
+}
+
+.logoutButton svg, .homeButton svg {
+    width: 20px; /* Adjust icon size as needed */
+    height: 20px;
+    fill: #ffffff;
+}
+

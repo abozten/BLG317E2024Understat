@@ -70,23 +70,30 @@ def get_season_team_performance(team_name):
     finally:
         connection.close()
 
-@app.route('/fut23', methods=['GET']) #Deniz'den aldım.
+@app.route('/fut23', methods=['GET'])
 def get_fut23_players():
     try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        offset = (page - 1) * limit
+
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT Name, Team, Country, League, Rating, Position, Price, Skill, Weak_foot, Pace, Shoot, Pass, Drible, Defense, Physical
+             query = """
+                SELECT `Name`,player_id,Team,team_id,Country,League,Rating,Position,Other_Positions,Run_type,Price,Skill,Weak_foot,Attack_rate,Defense_rate,Pace,Shoot,Pass,Drible,Defense,Physical,Body_type,Height_cm,Weight,Popularity,Base_Stats,In_Game_Stats
                 FROM fut23
-                LIMIT 20
-            """)
-            players = cursor.fetchall()
+                WHERE `Name` LIKE %s
+                LIMIT %s OFFSET %s
+            """
+             cursor.execute(query, (f'%{search}%', limit, offset))
+             players = cursor.fetchall()
         return jsonify(players)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
-
+        if connection:
+            connection.close()
 
 @app.route('/futplayer/<int:player_id>', methods=['GET'])
 def get_fut_player(player_id):
