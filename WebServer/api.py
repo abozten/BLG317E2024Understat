@@ -138,8 +138,128 @@ def get_team_fut23_players(team_name):
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
-#EMRE
 
+
+# SHOTS CRUD OPERATIONS
+@app.route('/shots', methods=['GET'])
+def get_shots():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        offset = (page - 1) * limit
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            query = """
+                SELECT shot_id, match_id, player_id, minute, X as x, Y as y, xG as xg, result, situation, shotType, player_assisted
+                FROM shots
+                 WHERE shot_id LIKE %s
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (f'%{search}%', limit, offset))
+            shots = cursor.fetchall()
+        return jsonify(shots)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
+
+@app.route('/shot/<int:shot_id>', methods=['GET'])
+def get_shot(shot_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT shot_id, match_id, player_id, minute, X as x, Y as y, xG as xg, result, situation, shotType, player_assisted
+                FROM shots
+                WHERE shot_id = %s
+            """, (shot_id,))
+            shot = cursor.fetchone()
+            if shot is None:
+                return jsonify({'error': 'Shot not found'}), 404
+        return jsonify(shot)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
+
+@app.route('/shots', methods=['POST'])
+def create_shot():
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO shots (shot_id, match_id, player_id, minute, X, Y, xG, result, situation, shotType, player_assisted)
+                VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (data.get('shot_id'), data.get('match_id'), data.get('player_id'), data.get('minute'),
+                  data.get('x'), data.get('y'), data.get('xg'), data.get('result'),
+                  data.get('situation'), data.get('shotType'), data.get('player_assisted')))
+            connection.commit()
+            cursor.execute("""
+                SELECT shot_id, match_id, player_id, minute, X as x, Y as y, xG as xg, result, situation, shotType, player_assisted
+                FROM shots
+                WHERE shot_id = %s
+            """, (data.get('shot_id'),))
+            new_shot = cursor.fetchone()
+        return jsonify(new_shot), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
+@app.route('/shot/<int:shot_id>', methods=['PUT'])
+def update_shot(shot_id):
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE shots
+                SET match_id = %s, player_id = %s, minute = %s, X = %s, Y = %s, xG = %s,
+                    result = %s, situation = %s, shotType = %s, player_assisted = %s
+                WHERE shot_id = %s
+            """, (data.get('match_id'), data.get('player_id'), data.get('minute'), data.get('x'),
+                  data.get('y'), data.get('xg'), data.get('result'), data.get('situation'),
+                  data.get('shotType'), data.get('player_assisted'), shot_id))
+            connection.commit()
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Shot not found'}), 404
+            # Fetch and return the updated shot data
+            cursor.execute("""
+                SELECT shot_id, match_id, player_id, minute, X as x, Y as y, xG as xg, result, situation, shotType, player_assisted
+                FROM shots
+                WHERE shot_id = %s
+            """, (shot_id,))
+            updated_shot = cursor.fetchone()
+        return jsonify(updated_shot)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
+
+@app.route('/shot/<int:shot_id>', methods=['DELETE'])
+def delete_shot(shot_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM shots WHERE shot_id = %s", (shot_id,))
+            connection.commit()
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Shot not found'}), 404
+        return jsonify({'message': 'Shot deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+           connection.close()
 
 #ALİ
 

@@ -3,49 +3,33 @@ import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function ShotsForm() {
-  const [players, setPlayers] = useState([]);
-  const [formData, setFormData] = useState({
-    Name: '',
-    player_id: 0,
-    Team: '',
-    team_id: 0,
-    Country: '',
-    League: '',
-    Rating: 0,
-    Position: '',
-    Other_Positions: '',
-    Run_type: '',
-    Price: '',
-    Skill: 0,
-    Weak_foot: 0,
-    Attack_rate: '',
-    Defense_rate: '',
-    Pace: 0,
-    Shoot: 0,
-    Pass: 0,
-    Drible: 0,
-    Defense: 0,
-    Physical: 0,
-    Body_type: '',
-    Height_cm: 0,
-    Weight: 0,
-    Popularity: 0,
-    Base_Stats: 0,
-    In_Game_Stats: 0,
+    const [shots, setShots] = useState([]);
+    const [formData, setFormData] = useState({
+        shot_id: 0,
+        match_id: 0,
+        player_id: 0,
+        minute: 0,
+        x: 0,
+        y: 0,
+        xg: 0,
+        result: '',
+        situation: '',
+        shotType: '',
+        player_assisted: 0
   });
     const [operation, setOperation] = useState('add');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [selectedShot, setSelectedShot] = useState(null);
     
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTimeout, setSearchTimeout] = useState(null);
     const [scrollTimeout, setScrollTimeout] = useState(null);
-    const PLAYERS_PER_PAGE = 20;
+    const SHOTS_PER_PAGE = 20;
 
-  const playerListRef = useRef(null);
+  const shotListRef = useRef(null);
 
     useEffect(() => {
         const operationsElement = document.querySelector(`.${styles.operations}`);
@@ -81,25 +65,35 @@ export default function ShotsForm() {
         };
     }, []);
 
-    const fetchPlayers = async (pageNum = 1, search = '') => {
-        try {
-            setLoading(true);
+    const fetchShots = async (pageNum = 1, search = '') => {
+         try {
+             setLoading(true);
             const response = await fetch(
-            `https://localhost:5001/fut23?page=${pageNum}&search=${search}&limit=${PLAYERS_PER_PAGE}`
+                `https://localhost:5001/shots?page=${pageNum}&search=${search}&limit=${SHOTS_PER_PAGE}`
             );
-            const data = await response.json();
+             if (!response.ok) {
+                 const message = `An error has occurred: ${response.status}`;
+                 throw new Error(message);
+             }
+           
+             const data = await response.json();
 
-            if (pageNum === 1) {
-                setPlayers(data);
-            } else {
-                setPlayers((prev) => [...prev, ...data]);
-            }
-
-            setHasMore(data.length === PLAYERS_PER_PAGE);
-            setLoading(false);
-        } catch (error) {
-            setError('Failed to fetch players');
-            setLoading(false);
+           if (Array.isArray(data)) {
+               if (pageNum === 1) {
+                    setShots(data);
+               } else {
+                   setShots((prev) => [...prev, ...data]);
+               }
+              
+             setHasMore(data.length === SHOTS_PER_PAGE);
+         } else {
+               setShots([]);
+               setHasMore(false);
+           }
+           setLoading(false);
+         } catch (error) {
+            setError('Failed to fetch shots: ' + error.message);
+           setLoading(false);
         }
     };
 
@@ -112,7 +106,7 @@ export default function ShotsForm() {
 
         const timeoutId = setTimeout(() => {
             setPage(1);
-            fetchPlayers(1, value);
+            fetchShots(1, value);
         }, 500);
 
     setSearchTimeout(timeoutId);
@@ -120,14 +114,14 @@ export default function ShotsForm() {
 
 
     const handleScroll = () => {
-        if (!playerListRef.current) return;
+        if (!shotListRef.current) return;
             if (scrollTimeout) clearTimeout(scrollTimeout);
         setScrollTimeout(
             setTimeout(() => {
-            const { scrollTop, clientHeight, scrollHeight } = playerListRef.current;
+            const { scrollTop, clientHeight, scrollHeight } = shotListRef.current;
             if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
                 setPage((prev) => prev + 1);
-                fetchPlayers(page + 1, searchTerm);
+                fetchShots(page + 1, searchTerm);
                 }
             }, 200)
         );
@@ -135,7 +129,7 @@ export default function ShotsForm() {
 
 
     useEffect(() => {
-    fetchPlayers(1, searchTerm);
+    fetchShots(1, searchTerm);
     }, []);
 
 
@@ -146,15 +140,15 @@ export default function ShotsForm() {
             let url, method;
             switch (operation) {
                 case 'add':
-                    url = 'https://localhost:5001/fut23';
+                    url = 'https://localhost:5001/shots';
                     method = 'POST';
                     break;
                 case 'update':
-                    url = `https://localhost:5001/futplayer/${formData.player_id}`;
+                    url = `https://localhost:5001/shot/${formData.shot_id}`;
                     method = 'PUT';
                     break;
                 case 'delete':
-                    url = `https://localhost:5001/futplayer/${formData.player_id}`;
+                    url = `https://localhost:5001/shot/${formData.shot_id}`;
                     method = 'DELETE';
                     break;
             }
@@ -171,7 +165,7 @@ export default function ShotsForm() {
             throw new Error(data.error || 'Operation failed');
             }
 
-        fetchPlayers(1, searchTerm);
+        fetchShots(1, searchTerm);
         resetForm();
         setError(null);
         } catch (error) {
@@ -182,70 +176,29 @@ export default function ShotsForm() {
     };
 
     const resetForm = () => {
-            setFormData({
-                Name: '',
+             setFormData({
+                shot_id: 0,
+                match_id: 0,
                 player_id: 0,
-                Team: '',
-                team_id: 0,
-                Country: '',
-                League: '',
-                Rating: 0,
-                Position: '',
-                Other_Positions: '',
-                Run_type: '',
-                Price: '',
-                Skill: 0,
-                Weak_foot: 0,
-                Attack_rate: '',
-                Defense_rate: '',
-                Pace: 0,
-                Shoot: 0,
-                Pass: 0,
-                Drible: 0,
-                Defense: 0,
-                Physical: 0,
-                Body_type: '',
-                Height_cm: 0,
-                Weight: 0,
-                Popularity: 0,
-                Base_Stats: 0,
-                In_Game_Stats: 0,
-                });
-        setSelectedPlayer(null);
+                minute: 0,
+                x: 0,
+                y: 0,
+                xg: 0,
+                result: '',
+                situation: '',
+                shotType: '',
+                 player_assisted: 0
+            });
+        setSelectedShot(null);
     };
 
-      const handlePlayerSelect = (player) => {
-        setFormData({
-        Name: player.Name || '',
-        player_id: player.player_id || 0,
-        Team: player.Team || '',
-        team_id: player.team_id || 0,
-        Country: player.Country || '',
-        League: player.League || '',
-        Rating: player.Rating || 0,
-        Position: player.Position || '',
-        Other_Positions: player.Other_Positions || '',
-        Run_type: player.Run_type || '',
-        Price: player.Price || '',
-        Skill: player.Skill || 0,
-        Weak_foot: player.Weak_foot || 0,
-        Attack_rate: player.Attack_rate || '',
-        Defense_rate: player.Defense_rate || '',
-        Pace: player.Pace || 0,
-        Shoot: player.Shoot || 0,
-        Pass: player.Pass || 0,
-        Drible: player.Drible || 0,
-        Defense: player.Defense || 0,
-        Physical: player.Physical || 0,
-        Body_type: player.Body_type || '',
-        Height_cm: player.Height_cm || 0,
-        Weight: player.Weight || 0,
-        Popularity: player.Popularity || 0,
-        Base_Stats: player.Base_Stats || 0,
-        In_Game_Stats: player.In_Game_Stats || 0,
-        });
-    setSelectedPlayer(player);
+
+   const handleShotSelect = (shot) => {
+        setFormData(shot);
+        setSelectedShot(shot);
     };
+
+
     return (
         <div className={styles.form}>
             {error && <div className={styles.error}>{error}</div>}
@@ -311,33 +264,33 @@ export default function ShotsForm() {
             <button type="submit" className={styles.submitButton} disabled={loading}>
             {loading
                 ? 'Processing...'
-                : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Player`}
+                : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Shot`}
             </button>
             </form>
-            <input
+             <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Search player..."
+                placeholder="Search shot..."
                 value={searchTerm}
                 onChange={handleSearch}
             />
             <div
                 className={styles.playerListContainer}
                 onScroll={handleScroll}
-                ref={playerListRef}
+                ref={shotListRef}
             >
-                {players.map((player) => (
+                {shots && shots.map((shot) => (
                     <div
-                        key={player.player_id}
+                        key={shot.shot_id}
                         className={`${styles.playerItem} ${
-                        selectedPlayer?.player_id === player.player_id
+                        selectedShot?.shot_id === shot.shot_id
                             ? styles.selected
                             : ''
                         }`}
-                        onClick={() => handlePlayerSelect(player)}
+                        onClick={() => handleShotSelect(shot)}
                     >
-                        <span>{player.Name}</span>
-                        <span>{player.Team}</span>
+                        <span>Match ID: {shot.match_id}</span>
+                         <span>Player ID: {shot.player_id}</span>
                     </div>
                     ))}
                 {loading && (
