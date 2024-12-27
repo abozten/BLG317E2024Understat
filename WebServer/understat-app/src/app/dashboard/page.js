@@ -7,6 +7,9 @@ import { faHome, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import Fut23Form from './fut23';
 import SeasonForm from './season';
+import ShotsForm from './shots';
+import MatchinfoForm from './match_info';
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -81,6 +84,10 @@ export default function Dashboard() {
           return <Fut23Form />;
        case 'seasons':
             return <SeasonForm/>;
+        case 'shots':
+            return <ShotsForm/>;
+        case 'matchinfo':
+            return <MatchinfoForm/>;            
       default:
         return null;
     }
@@ -101,8 +108,10 @@ export default function Dashboard() {
                <button onClick={() => setSelectedSection('teams')}>Teams</button>
               <button onClick={() => setSelectedSection('players')}>Players</button>
               <button onClick={() => setSelectedSection('matches')}>Matches</button>
-              <button onClick={() => setSelectedSection('fut23')}>FUT23 Data</button>
+              <button onClick={() => setSelectedSection('fut23')}>FUT23</button>
               <button onClick={() => setSelectedSection('seasons')}>Seasons</button>
+              <button onClick={() => setSelectedSection('shots')}>Shots</button>
+              <button onClick={() => setSelectedSection('matchinfo')}>Match Info</button>
            </div>
           <div className={styles.content}>
              {renderForm()}
