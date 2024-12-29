@@ -82,7 +82,7 @@ Follow these steps to get the project running on your local machine:
     npm install  # or yarn install
     ```
 3.  **Set up the backend:**
-   ```bash
+   ``bash
     cd server
     pip install -r requirements.txt
     ```
@@ -128,5 +128,3 @@ This project is licensed under the [MIT License](LICENSE) - see the `LICENSE` fi
 ## Contact
 
 If you have any questions, comments or concerns, feel free to create a new issue.
-
-This README provides a good starting point for your project on GitHub and should render properly with styling. Be sure to replace placeholders with your repository name, license info,  etc.
