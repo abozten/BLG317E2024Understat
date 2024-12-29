@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/your-github-username/your-repo-name">
-    <img src="https://img.shields.io/github/stars/your-github-username/your-repo-name?style=social" alt="GitHub Stars"/>
+  <a href="https://github.com/abozten/BLG317E2024Understat">
+    <img src="https://img.shields.io/github/stars/abozten/BLG317E2024Understat?style=social" alt="GitHub Stars"/>
   </a>
-  <a href="https://github.com/your-github-username/your-repo-name/issues">
+  <a href="https://github.com/abozten/BLG317E2024Understat/issues">
         <img src="https://img.shields.io/github/issues/your-github-username/your-repo-name" alt="Issues Open"/>
     </a>
-  <a href="https://github.com/your-github-username/your-repo-name/blob/main/LICENSE">
-        <img src="https://img.shields.io/github/license/your-github-username/your-repo-name" alt="License">
+  <a href="https://github.com/abozten/BLG317E2024Understat/blob/main/LICENSE">
+        <img src="https://img.shields.io/github/license/abozten/BLG317E2024Understat" alt="License">
   </a>
 </p>
 
