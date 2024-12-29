@@ -190,7 +190,7 @@ function TeamForm() {
           method = 'POST';
           break;
         case 'update':
-          url = `https://localhost:5001/team/${formData.team_name}`;
+          url = `https://localhost:5001/team/${selectedTeam.team_name}`;
           method = 'PUT';
           break;
         case 'delete':
@@ -572,7 +572,7 @@ function PlayerForm() {
                 <label>{key.replace('_', ' ').toUpperCase()}:</label>
                 <input
                   type={typeof formData[key] === 'number' ? 'number' : 'text'}
-                  step={key.includes('xG') || key.includes('xA') ? '0.01' : '1'}
+                  step={key.includes('xG') || key.includes('xA') ? '0.000001' : '1'}
                   value={formData[key]}
                   onChange={(e) =>
                     setFormData({

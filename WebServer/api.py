@@ -26,7 +26,7 @@ db_config = {
     'host': 'localhost',
     'user': 'root',
     'password': 'blg317e2024',
-    'database': 'Understat',
+    'database': 'Understat2',
     'port': 3306,
     'cursorclass': DictCursor
 }
@@ -133,7 +133,7 @@ def delete_season(season_id):
             connection.close()
 
 # Advanced query to fetch season summary with grouping and conditions
-@app.route('/season-summary', methods=['GET'])
+@app.route('/season-summary', methods=['GET'])#Deniz'den aldım.
 def get_season_summary():
     try:
         connection = get_db_connection()
@@ -1090,13 +1090,13 @@ def get_team_squad(team_name):
              connection.close()
 
             #Team table
-@app.route('/addteam', methods=['POST'])#This works but returns an error 0?
+@app.route('/addteam', methods=['POST'])
 def create_team():
     try:
         team_data = request.get_json()
         if not team_data.get('team_name') or not team_data.get('team_id'):
             return jsonify({'error': 'team_name and team_id are required'}), 400
-        
+
         with get_db_connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute("""
@@ -1109,45 +1109,80 @@ def create_team():
                     WHERE team_name = %s AND team_id = %s
                 """, (team_data['team_name'], team_data['team_id']))
                 new_team = cursor.fetchone()
-        
-        return jsonify({'message': 'Team created', 'team': {'team_id': new_team[0], 'team_name': new_team[1]}}), 201
+
+                if new_team is None:
+                  return jsonify({'message': 'Team created successfully but could not fetch the added team', 'team': None}), 201
+
+                return jsonify({
+                 'message': 'Team created',
+                 'team': {
+                    'team_id': new_team['team_id'],
+                    'team_name': new_team['team_name']
+                  }
+                }), 201
+
+
+    except pymysql.Error as e:
+      app.logger.error(f"Database error during team creation: {e}")
+      return jsonify({'error': f'Database error: {str(e)}'}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
+       app.logger.error(f"Error during team creation: {e}")
+       return jsonify({'error': str(e)}), 500
+    
 @app.route('/team/<team_name>', methods=['PUT'])
 def update_team(team_name):
     try:
         team_data = request.get_json()
-        if 'team_id' not in team_data:
-            return jsonify({'error': 'team_id is required'}), 400
+        new_team_name = team_data.get('team_name')
+        new_team_id = team_data.get('team_id')
+
+        if not new_team_id:
+             return jsonify({'error': 'team_id is required'}), 400
+
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
-                UPDATE teams 
-                SET team_id = %s
-                WHERE team_name = %s
-            """, (team_data['team_id'], team_name))
-            
-            if cursor.rowcount == 0:
+           if new_team_name and new_team_name != team_name:
+
+              cursor.execute("""
+                  UPDATE teams 
+                  SET team_name = %s,
+                    team_id = %s
+                  WHERE team_name = %s
+              """, (new_team_name, new_team_id, team_name))
+           else:
+                 cursor.execute("""
+                  UPDATE teams 
+                  SET 
+                    team_id = %s
+                  WHERE team_name = %s
+              """, (new_team_id, team_name))
+
+           connection.commit()
+           if cursor.rowcount == 0:
                 return jsonify({'error': 'Team not found'}), 404
-            
-            # Fetch updated team data
-            cursor.execute("""
-                SELECT team_id, team_name 
-                FROM teams 
-                WHERE team_name = %s
-            """, (team_name,))
-            updated_team = cursor.fetchone()
-            connection.commit()
-            
-        return jsonify({'message': 'Team updated', 'team': updated_team})
+
+
+           # Fetch updated team data
+           cursor.execute("""
+               SELECT team_id, team_name
+               FROM teams
+               WHERE team_name = %s
+           """, (new_team_name if new_team_name else team_name,))
+           updated_team = cursor.fetchone()
+
+
+           return jsonify({'message': 'Team updated', 'team': updated_team})
+    except pymysql.Error as e:
+        app.logger.error(f"Database error during team update: {e}")
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     except Exception as e:
+        app.logger.error(f"Error during team update: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
-        connection.close()
-
+        if connection:
+            connection.close()
+            
 @app.route('/team/<team_name>', methods=['DELETE'])
 def delete_team(team_name):
     try:
