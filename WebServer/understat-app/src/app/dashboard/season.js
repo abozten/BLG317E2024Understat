@@ -272,41 +272,42 @@ export default function SeasonForm() {
                 ? 'Processing...'
                 : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Season`}
             </button>
-            </form>
-             <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Search season by teamID..."
-                value={searchTerm}
-                onChange={handleSearch}
-            />
-            <div
-                className={styles.playerListContainer}
-                onScroll={handleScroll}
-                ref={seasonListRef}
-            >
-                { seasons && seasons.map((season) => (
-                    <div
-                        key={season.seasonentryid}
-                        className={`${styles.playerItem} ${
-                        selectedSeason?.seasonentryid === season.seasonentryid
-                            ? styles.selected
-                            : ''
-                        }`}
-                        onClick={() => handleSeasonSelect(season)}
-                    >
-                        <span>{season.title}</span>
-                         <span>{season.year}</span>
-                    </div>
-                    ))}
-                {loading && (
-                <div
-                    className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}
-                >
-                    Loading...
-                </div>
-                )}
+      </form>
+      <input
+        type="text"
+        className={styles.searchInput}
+        placeholder="Search season by teamID..."
+        value={searchTerm}
+        onChange={handleSearch}
+      />
+      <div
+        className={styles.playerListContainer}
+        onScroll={handleScroll}
+        ref={seasonListRef}
+      >
+        {seasons && seasons.map((season) => (
+          <div
+            key={season.seasonentryid}
+            className={`${styles.playerItem} ${
+              selectedSeason?.seasonentryid === season.seasonentryid
+                ? styles.selected
+                : ''
+            }`}
+            onClick={() => handleSeasonSelect(season)}
+          >
+            <div className={styles.seasonInfo}>
+              <span className={styles.teamId}>Team ID: {season.team_id}</span>
+              <span className={styles.title}>{season.title}</span>
+              <span className={styles.year}>{season.year}</span>
             </div>
-        </div>
-    );
+          </div>
+        ))}
+        {loading && (
+          <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>
+            Loading...
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

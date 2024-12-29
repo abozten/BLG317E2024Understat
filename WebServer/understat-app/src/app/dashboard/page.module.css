@@ -385,3 +385,35 @@
     fill: #ffffff;
 }
 
+.seasonInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 8px;
+  }
+  
+  .teamId {
+    font-weight: bold;
+    min-width: 100px;
+  }
+  
+  .title {
+    flex-grow: 1;
+    margin: 0 12px;
+  }
+  
+  .year {
+    min-width: 60px;
+    text-align: right;
+  }
+  
+  .playerItem {
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s;
+  }
+  
+  .playerItem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
