@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function SeasonForm() {
-  const [seasons, setSeasons] = useState([]);
+    const [seasons, setSeasons] = useState([]);
     const [formData, setFormData] = useState({
         seasonentryid: 0,
         team_id: 0,
@@ -296,6 +296,7 @@ export default function SeasonForm() {
             onClick={() => handleSeasonSelect(season)}
           >
             <div className={styles.seasonInfo}>
+              <span className={styles.teamId}>ID: {season.seasonentryid}</span>
               <span className={styles.teamId}>Team ID: {season.team_id}</span>
               <span className={styles.title}>{season.title}</span>
               <span className={styles.year}>{season.year}</span>
