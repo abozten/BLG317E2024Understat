@@ -16,20 +16,21 @@ export default function ShotsForm() {
         situation: '',
         shotType: '',
         player_assisted: 0
-  });
+    });
     const [operation, setOperation] = useState('add');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedShot, setSelectedShot] = useState(null);
-    
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState(null);
+    const [playerNames, setPlayerNames] = useState({}); // Store player names using player_id as keys
+
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTimeout, setSearchTimeout] = useState(null);
     const [scrollTimeout, setScrollTimeout] = useState(null);
     const SHOTS_PER_PAGE = 20;
 
-  const shotListRef = useRef(null);
+    const shotListRef = useRef(null);
 
     useEffect(() => {
         const operationsElement = document.querySelector(`.${styles.operations}`);
@@ -38,104 +39,133 @@ export default function ShotsForm() {
         );
 
         const updateDialPosition = () => {
-        const checkedRadioButton = document.querySelector(
-            `.${styles.operations} input[type="radio"]:checked`
-        );
-        if (operationsElement && checkedRadioButton) {
-            if (checkedRadioButton.value === 'add') {
-            operationsElement.style.setProperty('--dial-translate-x', '0%');
-            } else if (checkedRadioButton.value === 'update') {
-            operationsElement.style.setProperty('--dial-translate-x', '100%');
-            } else if (checkedRadioButton.value === 'delete') {
-            operationsElement.style.setProperty('--dial-translate-x', '200%');
+            const checkedRadioButton = document.querySelector(
+                `.${styles.operations} input[type="radio"]:checked`
+            );
+            if (operationsElement && checkedRadioButton) {
+                if (checkedRadioButton.value === 'add') {
+                    operationsElement.style.setProperty('--dial-translate-x', '0%');
+                } else if (checkedRadioButton.value === 'update') {
+                    operationsElement.style.setProperty('--dial-translate-x', '100%');
+                } else if (checkedRadioButton.value === 'delete') {
+                    operationsElement.style.setProperty('--dial-translate-x', '200%');
+                }
             }
-        }
         };
 
-    radioButtons.forEach((radio) => {
-        radio.addEventListener('change', updateDialPosition);
-    });
+        radioButtons.forEach((radio) => {
+            radio.addEventListener('change', updateDialPosition);
+        });
 
         updateDialPosition();
 
         return () => {
-        radioButtons.forEach((radio) => {
-            radio.removeEventListener('change', updateDialPosition);
-        });
+            radioButtons.forEach((radio) => {
+                radio.removeEventListener('change', updateDialPosition);
+            });
         };
     }, []);
 
     const fetchShots = async (pageNum = 1, search = '') => {
-         try {
-             setLoading(true);
+        try {
+            setLoading(true);
             const response = await fetch(
                 `https://localhost:5001/shots?page=${pageNum}&search=${search}&limit=${SHOTS_PER_PAGE}`
             );
-             if (!response.ok) {
-                 const message = `An error has occurred: ${response.status}`;
-                 throw new Error(message);
-             }
-           
-             const data = await response.json();
+            if (!response.ok) {
+                const message = `An error has occurred: ${response.status}`;
+                throw new Error(message);
+            }
 
-           if (Array.isArray(data)) {
-               if (pageNum === 1) {
+            const data = await response.json();
+
+            if (Array.isArray(data)) {
+                if (pageNum === 1) {
                     setShots(data);
-               } else {
-                   setShots((prev) => [...prev, ...data]);
-               }
-              
-             setHasMore(data.length === SHOTS_PER_PAGE);
-         } else {
-               setShots([]);
-               setHasMore(false);
-           }
-           setLoading(false);
-         } catch (error) {
+                } else {
+                    setShots((prev) => [...prev, ...data]);
+                }
+
+                setHasMore(data.length === SHOTS_PER_PAGE);
+                 // Fetch player names for the shots in this page
+                    fetchPlayerNames(data);
+            } else {
+                setShots([]);
+                setHasMore(false);
+            }
+            setLoading(false);
+        } catch (error) {
             setError('Failed to fetch shots: ' + error.message);
-           setLoading(false);
+            setLoading(false);
         }
     };
 
+      //Fetch player names using multiple player ID's
+    const fetchPlayerNames = async (shotsData) => {
+          const playerIds = shotsData.map((shot) => shot.player_id);
+          const uniquePlayerIds = [...new Set(playerIds)]; // Remove duplicate player IDs
+          if (uniquePlayerIds.length === 0) {
+               return; // No players for this shot
+          }
+        try {
+        const playerPromises = uniquePlayerIds.map(async (playerId) => {
+             const playerResponse = await fetch(`https://localhost:5001/player/${playerId}`);
+                if (playerResponse.ok) {
+                 return await playerResponse.json();
+            }
+           return null
+         });
 
+           const playerResults = await Promise.all(playerPromises);
+           //Use a dictionary to store player names
+           const newPlayerNames = playerResults.reduce((acc, player) => {
+                  if(player){
+                  acc[player.player_id] = player.player_name;
+                   }
+                  return acc
+           },{})
+
+
+          setPlayerNames((prevNames) => ({...prevNames, ...newPlayerNames}));
+        } catch (error) {
+            console.error('Error fetching player names:', error);
+        }
+    };
     const handleSearch = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
 
-    if (searchTimeout) clearTimeout(searchTimeout);
+        if (searchTimeout) clearTimeout(searchTimeout);
 
         const timeoutId = setTimeout(() => {
             setPage(1);
             fetchShots(1, value);
         }, 500);
 
-    setSearchTimeout(timeoutId);
+        setSearchTimeout(timeoutId);
     };
-
 
     const handleScroll = () => {
         if (!shotListRef.current) return;
-            if (scrollTimeout) clearTimeout(scrollTimeout);
+        if (scrollTimeout) clearTimeout(scrollTimeout);
         setScrollTimeout(
             setTimeout(() => {
-            const { scrollTop, clientHeight, scrollHeight } = shotListRef.current;
-            if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
-                setPage((prev) => prev + 1);
-                fetchShots(page + 1, searchTerm);
+                const { scrollTop, clientHeight, scrollHeight } = shotListRef.current;
+                if (scrollHeight - scrollTop <= clientHeight * 1.5 && !loading && hasMore) {
+                    setPage((prev) => prev + 1);
+                    fetchShots(page + 1, searchTerm);
                 }
             }, 200)
         );
     };
 
-
     useEffect(() => {
-    fetchShots(1, searchTerm);
+        fetchShots(1, searchTerm);
     }, []);
 
-
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+        e.preventDefault();
+        setLoading(true);
         try {
             let url, method;
             switch (operation) {
@@ -153,7 +183,6 @@ export default function ShotsForm() {
                     break;
             }
 
-
             const response = await fetch(url, {
                 method,
                 headers: operation !== 'delete' ? { 'Content-Type': 'application/json' } : {},
@@ -161,13 +190,13 @@ export default function ShotsForm() {
             });
 
             if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Operation failed');
+                const data = await response.json();
+                throw new Error(data.error || 'Operation failed');
             }
 
-        fetchShots(1, searchTerm);
-        resetForm();
-        setError(null);
+            fetchShots(1, searchTerm);
+            resetForm();
+            setError(null);
         } catch (error) {
             setError(error.message);
         } finally {
@@ -176,98 +205,96 @@ export default function ShotsForm() {
     };
 
     const resetForm = () => {
-             setFormData({
-                shot_id: 0,
-                match_id: 0,
-                player_id: 0,
-                minute: 0,
-                x: 0,
-                y: 0,
-                xg: 0,
-                result: '',
-                situation: '',
-                shotType: '',
-                 player_assisted: 0
-            });
+        setFormData({
+            shot_id: 0,
+            match_id: 0,
+            player_id: 0,
+            minute: 0,
+            x: 0,
+            y: 0,
+            xg: 0,
+            result: '',
+            situation: '',
+            shotType: '',
+            player_assisted: 0
+        });
         setSelectedShot(null);
     };
 
-
-   const handleShotSelect = (shot) => {
+    const handleShotSelect = (shot) => {
         setFormData(shot);
         setSelectedShot(shot);
     };
 
-
     return (
         <div className={styles.form}>
             {error && <div className={styles.error}>{error}</div>}
-        <div className={styles.operations}>
-            <label>
-            <input
-                type="radio"
-                name="operation"
-                value="add"
-                checked={operation === 'add'}
-                onChange={() => {
-                setOperation('add');
-                resetForm();
-                }}
-            />
-            Add
-            </label>
-            <label>
-            <input
-                type="radio"
-                name="operation"
-                value="update"
-                checked={operation === 'update'}
-                onChange={() => setOperation('update')}
-            />
-            Update
-            </label>
-            <label>
-            <input
-                type="radio"
-                name="operation"
-                value="delete"
-                checked={operation === 'delete'}
-                onChange={() => setOperation('delete')}
-            />
-            Delete
-            </label>
+            <div className={styles.operations}>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="add"
+                        checked={operation === 'add'}
+                        onChange={() => {
+                            setOperation('add');
+                            resetForm();
+                        }}
+                    />
+                    Add
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="update"
+                        checked={operation === 'update'}
+                        onChange={() => setOperation('update')}
+                    />
+                    Update
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="operation"
+                        value="delete"
+                        checked={operation === 'delete'}
+                        onChange={() => setOperation('delete')}
+                    />
+                    Delete
+                </label>
             </div>
-        <form onSubmit={handleSubmit}>
-            {operation !== 'delete' && (
-                <>
-                    {Object.keys(formData).map((key) => (
-                        <div className={styles.formGroup} key={key}>
-                        <label>{key.replace('_', ' ').toUpperCase()}:</label>
-                            <input
-                                type={typeof formData[key] === 'number' ? 'number' : 'text'}
-                                value={formData[key]}
-                            onChange={(e) =>
-                                setFormData({
-                                ...formData,
-                                [key]:
-                                    typeof formData[key] === 'number'
-                                    ? parseFloat(e.target.value)
-                                    : e.target.value,
-                                })
-                            }
-                            required
-                            />
-                        </div>
-                    ))}
-                </>
-            )}
-            <button type="submit" className={styles.submitButton} disabled={loading}>
-            {loading
-                ? 'Processing...'
-                : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Shot`}
-            </button>
+            <form onSubmit={handleSubmit}>
+                {operation !== 'delete' && (
+                    <>
+                        {Object.keys(formData).map((key) => (
+                            <div className={styles.formGroup} key={key}>
+                                <label>{key.replace('_', ' ').toUpperCase()}:</label>
+                                <input
+                                    type={typeof formData[key] === 'number' ? 'number' : 'text'}
+                                    value={formData[key]}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            [key]:
+                                                typeof formData[key] === 'number'
+                                                    ? parseFloat(e.target.value)
+                                                    : e.target.value,
+                                        })
+                                    }
+                                    required
+                                />
+                            </div>
+                        ))}
+                    </>
+                )}
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading
+                        ? 'Processing...'
+                        : `${operation.charAt(0).toUpperCase() + operation.slice(1)} Shot`}
+                </button>
             </form>
-             <input
+            <input
                 type="text"
                 className={styles.searchInput}
                 placeholder="Search by shot ID..."
@@ -283,22 +310,22 @@ export default function ShotsForm() {
                     <div
                         key={shot.shot_id}
                         className={`${styles.playerItem} ${
-                        selectedShot?.shot_id === shot.shot_id
-                            ? styles.selected
-                            : ''
+                            selectedShot?.shot_id === shot.shot_id
+                                ? styles.selected
+                                : ''
                         }`}
                         onClick={() => handleShotSelect(shot)}
                     >
                         <span>Match ID: {shot.match_id}</span>
-                         <span>Player ID: {shot.player_id}</span>
+                         <span>Player: {playerNames[shot.player_id] || 'Loading...'}</span>
                     </div>
-                    ))}
+                ))}
                 {loading && (
-                <div
-                    className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}
-                >
-                    Loading...
-                </div>
+                    <div
+                        className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}
+                    >
+                        Loading...
+                    </div>
                 )}
             </div>
         </div>
