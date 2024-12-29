@@ -18,7 +18,7 @@ export default function MatchDetails({ params }) {
 
   const fetchMatchDetails = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5001';
 
       // Fetch match and match_info in parallel
       const [matchResponse, matchInfoResponse] = await Promise.all([
