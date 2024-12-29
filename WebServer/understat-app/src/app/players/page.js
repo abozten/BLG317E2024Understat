@@ -19,8 +19,29 @@ const PlayersPage = () => {
 
     const playerListRef = useRef(null);
     const PLAYERS_PER_PAGE = 20;
-    const columns = ['player_name', 'games', 'time', 'goals', 'xG', 'assists', 'xA', 'shots', 'key_passes', 'yellow_cards', 'red_cards', 'position', 'team_title', 'npg', 'npxG', 'xGChain', 'xGBuildup', 'year'];
+      const columns = [
+          'player_name',
+          'games',
+          'time',
+          'goals',
+          'xG',
+          'assists',
+          'xA',
+          'shots',
+          'key_passes',
+          'yellow_cards',
+          'red_cards',
+          'position',
+          'team_title',
+          'npg',
+          'npxG',
+          'xGChain',
+          'xGBuildup',
+          'year'
+      ];
+     const displayColumns = columns.map((col) => col.replace(/_/g, ' ').toUpperCase())
     const [scrollTimeout, setScrollTimeout] = useState(null);
+
 
     useEffect(() => {
         fetchPlayers(1, filters);
@@ -113,7 +134,7 @@ const PlayersPage = () => {
     };
 
     if (loading) {
-        return <div>Loading players...</div>;
+        return <div className={styles.loading}>Loading players...</div>;
     }
 
     if (error) {
@@ -133,29 +154,38 @@ const PlayersPage = () => {
                     initialFilters={filters}
                 />}
             </div>
-            <div className={styles.playerListContainer} onScroll={handleScroll} ref={playerListRef}>
-                <table className={styles.table}>
+             <div className={styles.playerListContainer} onScroll={handleScroll} ref={playerListRef}>
+                 <table className={styles.table}>
+                    <thead>
+                        <tr className={styles.headerRow}>
+                            {displayColumns.map(column => (
+                                <th key={column} className={styles.headerCell}>
+                                    {column}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
                     <tbody>
-                        {players.map(player => (
-                            <tr key={player.season_player_id} className={`${styles.row} ${styles.fadeIn}`}>
-                                {columns.map(column => (
-                                    <td key={column} className={styles.cell}>
+                    {players.map(player => (
+                         <tr key={player.season_player_id} className={`${styles.row} ${styles.fadeIn}`}>
+                               {columns.map(column => (
+                                <td key={column} className={styles.cell}>
                                         <Link href={`/players/${player.player_id}`} style={{ textDecoration: 'none', color: '#ffffff' }}>
                                             {player[column]}
                                         </Link>
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                        {loadingMore && (
-                            <tr className={`${styles.row} ${styles.loadingRow}`}>
-                                <td colSpan={columns.length} className={styles.loadingCell}>
-                                    <div className={styles.loadingAnimation}>Loading...</div>
                                 </td>
+                                 ))}
+                        </tr>
+                    ))}
+                        {loadingMore && (
+                           <tr className={`${styles.row} ${styles.loadingRow}`}>
+                            <td colSpan={columns.length} className={styles.loadingCell}>
+                                <div className={styles.loadingAnimation}>Loading...</div>
+                            </td>
                             </tr>
                         )}
-                    </tbody>
-                </table>
+                   </tbody>
+               </table>
                 {loading && <div className={`${styles.loadingIndicator} ${styles.loadingAnimation}`}>Loading...</div>}
             </div>
         </div>

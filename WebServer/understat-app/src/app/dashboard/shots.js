@@ -270,7 +270,7 @@ export default function ShotsForm() {
              <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Search shot..."
+                placeholder="Search by shot ID..."
                 value={searchTerm}
                 onChange={handleSearch}
             />
