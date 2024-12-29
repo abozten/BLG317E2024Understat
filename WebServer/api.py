@@ -262,7 +262,110 @@ def delete_shot(shot_id):
            connection.close()
 
 #ALİ
+   #Match_Info
+@app.route('/match_infos', methods=['GET'])
+def get_match_infos(): #wont be necessary
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM match_infos
+                LIMIT 20
+            """)
+            matches = cursor.fetchall()
+        return jsonify(matches)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
 
+@app.route('/match_infos/<int:match_id>', methods=['GET'])
+def get_match_info(match_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM match_infos 
+                WHERE match_id = %s
+            """, (match_id,))
+            match = cursor.fetchone()
+            if match is None:
+                return jsonify({'error': 'Match info not found'}), 404
+        return jsonify(match)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/match_infos', methods=['POST'])
+def create_match_info():
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO match_infos (fid, match_id, h, a, date, league_id, season, h_goals, a_goals, 
+                    team_h, team_a, h_xg, a_xg, h_w, h_d, h_l, league, h_shot, a_shot, h_shotOnTarget, 
+                    a_shotOnTarget, h_deep, a_deep, a_ppda, h_ppda)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (data['fid'], data['match_id'], data['h'], data['a'], data['date'], data['league_id'],
+                 data['season'], data['h_goals'], data['a_goals'], data['team_h'], data['team_a'],
+                 data['h_xg'], data['a_xg'], data['h_w'], data['h_d'], data['h_l'], data['league'],
+                 data['h_shot'], data['a_shot'], data['h_shotOnTarget'], data['a_shotOnTarget'],
+                 data['h_deep'], data['a_deep'], data['a_ppda'], data['h_ppda'])
+            )
+            connection.commit()
+        return jsonify({'message': 'Match info created successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/match_infos/<int:match_id>', methods=['PUT'])
+def update_match_info(match_id):
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE match_infos
+                SET h = %s, a = %s, date = %s, league_id = %s, season = %s, h_goals = %s, a_goals = %s, 
+                    team_h = %s, team_a = %s, h_xg = %s, a_xg = %s, h_w = %s, h_d = %s, h_l = %s, league = %s, 
+                    h_shot = %s, a_shot = %s, h_shotOnTarget = %s, a_shotOnTarget = %s, h_deep = %s, a_deep = %s, 
+                    a_ppda = %s, h_ppda = %s
+                WHERE match_id = %s
+                """,
+                (data['h'], data['a'], data['date'], data['league_id'], data['season'], data['h_goals'],
+                 data['a_goals'], data['team_h'], data['team_a'], data['h_xg'], data['a_xg'], data['h_w'],
+                 data['h_d'], data['h_l'], data['league'], data['h_shot'], data['a_shot'], data['h_shotOnTarget'],
+                 data['a_shotOnTarget'], data['h_deep'], data['a_deep'], data['a_ppda'], data['h_ppda'], match_id)
+            )
+            connection.commit()
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Match info not found'}), 404
+        return jsonify({'message': 'Match info updated successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
+@app.route('/match_infos/<int:match_id>', methods=['DELETE'])
+def delete_match_info(match_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM match_infos WHERE match_id = %s", (match_id,))
+            connection.commit()
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Match info not found'}), 404
+        return jsonify({'message': 'Match info deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
 
 
 #ARDA
