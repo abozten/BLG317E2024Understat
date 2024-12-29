@@ -34,22 +34,129 @@ db_config = {
 def get_db_connection():
     return pymysql.connect(**db_config)
 #DENİZ
-@app.route('/seasons', methods=['GET'])    #Deniz'den aldım.
+#SEASONS
+@app.route('/seasons', methods=['GET'])
 def get_seasons():
     try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        offset = (page - 1) * limit
+
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT seasonentryid, team_id, title, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts
+            query = """
+                SELECT seasonentryid, team_id, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts
                 FROM season
-                LIMIT 20
-            """)
+                 WHERE team_id LIKE %s
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (f'%{search}%', limit, offset))
             seasons = cursor.fetchall()
         return jsonify(seasons)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     finally:
-        connection.close()
+        if connection:
+            connection.close()
+
+@app.route('/season/<int:season_id>', methods=['PUT'])
+def update_season(season_id):
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE season SET team_id=%s, year=%s, xG=%s, xGA=%s, npxG=%s, npxGA=%s, scored=%s, missed=%s, wins=%s, draws=%s, loses=%s, pts=%s
+                WHERE seasonentryid=%s
+                """,
+                (data.get('team_id'), data.get('year'), data.get('xG'), data.get('xGA'), data.get('npxG'), data.get('npxGA'),
+                 data.get('scored'), data.get('missed'), data.get('wins'), data.get('draws'), data.get('loses'), data.get('pts'), season_id)
+            )
+            connection.commit()
+            cursor.execute("""
+                SELECT seasonentryid, team_id, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts
+                FROM season
+                WHERE seasonentryid = %s
+            """, (season_id,))
+            updated_season = cursor.fetchone()
+        return jsonify(updated_season)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+@app.route('/seasons', methods=['POST'])
+def create_season():
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO season (team_id, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (data.get('team_id'), data.get('year'), data.get('xG'), data.get('xGA'), data.get('npxG'), data.get('npxGA'),
+                 data.get('scored'), data.get('missed'), data.get('wins'), data.get('draws'), data.get('loses'), data.get('pts'))
+            )
+            connection.commit()
+            cursor.execute("""
+                SELECT seasonentryid, team_id, year, xG, xGA, npxG, npxGA, scored, missed, wins, draws, loses, pts
+                FROM season
+                WHERE seasonentryid = LAST_INSERT_ID()
+            """)
+            new_season = cursor.fetchone()
+        return jsonify(new_season), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+@app.route('/season/<int:season_id>', methods=['DELETE'])
+def delete_season(season_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM season WHERE seasonentryid=%s", (season_id,))
+            connection.commit()
+            if cursor.rowcount == 0:
+                return jsonify({'error': 'Season not found'}), 404
+        return jsonify({'message': 'Season deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+# Advanced query to fetch season summary with grouping and conditions
+@app.route('/season-summary', methods=['GET'])
+def get_season_summary():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT team_id, year, COUNT(*) AS total_matches,
+                       SUM(scored) AS total_scored, SUM(missed) AS total_missed,
+                       AVG(xG) AS avg_xG, AVG(xGA) AS avg_xGA
+                FROM season
+                GROUP BY team_id, year
+                HAVING COUNT(*) > 5
+                ORDER BY year DESC, team_id ASC
+                """
+            )
+            summary = cursor.fetchall()
+        return jsonify(summary)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
 
 @app.route('/season/<team_name>', methods=['GET']) #Deniz'den aldım.
 def get_season_team_performance(team_name):
@@ -139,6 +246,123 @@ def get_team_fut23_players(team_name):
     finally:
         connection.close()
 
+@app.route('/fut23', methods=['POST'])#Deniz'den aldım.
+def create_fut23():
+     try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                 INSERT INTO fut23 (Name, player_id, Team, team_id, Country, League, Rating, Position, Other_Positions, Run_type, Price, Skill, Weak_foot, Attack_rate, Defense_rate, Pace, Shoot, Pass, Drible, Defense, Physical, Body_type, Height_cm, Weight, Popularity, Base_Stats, In_Game_Stats)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (data.get('Name'), data.get('player_id'), data.get('Team'), data.get('team_id'), data.get('Country'), data.get('League'), data.get('Rating'), data.get('Position'),
+                 data.get('Other_Positions'), data.get('Run_type'), data.get('Price'), data.get('Skill'), data.get('Weak_foot'), data.get('Attack_rate'),
+                 data.get('Defense_rate'), data.get('Pace'), data.get('Shoot'), data.get('Pass'), data.get('Drible'), data.get('Defense'), data.get('Physical'), data.get('Body_type'),
+                 data.get('Height_cm'), data.get('Weight'), data.get('Popularity'), data.get('Base_Stats'), data.get('In_Game_Stats'))
+            )
+            connection.commit()
+        return jsonify({'message': 'FUT23 player created successfully'}), 201
+     except Exception as e:
+        return jsonify({'error': str(e)}), 400
+     finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+@app.route('/futplayer/<int:player_id>', methods=['PUT'])#Deniz'den aldım.
+def update_fut23(player_id):
+    try:
+        data = request.get_json()
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE fut23 SET Name=%s, Team=%s, team_id=%s, Country=%s, League=%s, Rating=%s, Position=%s, Other_Positions=%s, Run_type=%s, Price=%s, Skill=%s, Weak_foot=%s, Attack_rate=%s, Defense_rate=%s, Pace=%s, Shoot=%s, Pass=%s, Drible=%s, Defense=%s, Physical=%s, Body_type=%s, Height_cm=%s, Weight=%s, Popularity=%s, Base_Stats=%s, In_Game_Stats=%s
+                WHERE player_id=%s
+                """,
+                (data.get('Name'), data.get('Team'), data.get('team_id'), data.get('Country'), data.get('League'), data.get('Rating'), data.get('Position'), data.get('Other_Positions'),
+                 data.get('Run_type'), data.get('Price'), data.get('Skill'), data.get('Weak_foot'), data.get('Attack_rate'), data.get('Defense_rate'), data.get('Pace'),
+                 data.get('Shoot'), data.get('Pass'), data.get('Drible'), data.get('Defense'), data.get('Physical'), data.get('Body_type'),
+                 data.get('Height_cm'), data.get('Weight'), data.get('Popularity'), data.get('Base_Stats'), data.get('In_Game_Stats'), player_id)
+            )
+            connection.commit()
+            cursor.execute("""
+               SELECT `Name`,player_id,Team,team_id,Country,League,Rating,Position,Other_Positions,Run_type,Price,Skill,Weak_foot,Attack_rate,Defense_rate,Pace,Shoot,Pass,Drible,Defense,Physical,Body_type,Height_cm,Weight,Popularity,Base_Stats,In_Game_Stats
+               FROM fut23
+               WHERE player_id = %s
+            """, (player_id,))
+            updated_player = cursor.fetchone()
+        return jsonify(updated_player)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+@app.route('/futplayer/<int:player_id>', methods=['DELETE'])#Deniz'den aldım.
+def delete_fut23(player_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM fut23 WHERE player_id=%s", (player_id,))
+            connection.commit()
+        return jsonify({'message': 'FUT23 player deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+# Advanced query to fetch player statistics summary
+@app.route('/fut23-summary', methods=['GET'])#Deniz'den aldım.
+def get_fut23_summary():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT Team, AVG(Rating) AS avg_rating, COUNT(*) AS total_players,
+                       MAX(Price) AS max_price, MIN(Price) AS min_price
+                FROM fut23
+                WHERE Rating > 80
+                GROUP BY Team
+                HAVING COUNT(*) > 3
+                ORDER BY avg_rating DESC, total_players DESC
+                """
+            )
+            summary = cursor.fetchall()
+        return jsonify(summary)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
+# Advanced query combining season and fut23 tables
+@app.route('/team-performance', methods=['GET'])#Deniz'den aldım.
+def get_team_performance():
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT s.team_id, s.year, f.Team, COUNT(*) AS total_matches,
+                       AVG(s.xG) AS avg_team_xG, AVG(f.Rating) AS avg_player_rating
+                FROM season s
+                JOIN fut23 f ON s.team_id = f.Team
+                WHERE s.year = 2023
+                GROUP BY s.team_id, s.year, f.Team
+                ORDER BY avg_team_xG DESC, avg_player_rating DESC
+                """
+            )
+            performance = cursor.fetchall()
+        return jsonify(performance)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
 
 # SHOTS CRUD OPERATIONS
 @app.route('/shots', methods=['GET'])

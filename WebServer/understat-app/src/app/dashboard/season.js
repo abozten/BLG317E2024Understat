@@ -276,7 +276,7 @@ export default function SeasonForm() {
              <input
                 type="text"
                 className={styles.searchInput}
-                placeholder="Search season..."
+                placeholder="Search season by teamID..."
                 value={searchTerm}
                 onChange={handleSearch}
             />
