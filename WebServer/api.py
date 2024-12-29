@@ -521,6 +521,36 @@ def get_match_info(match_id):
     finally:
         connection.close()
 
+@app.route('/match_infos_search', methods=['GET'])
+def get_match_infos_search():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        search = request.args.get('search', '')
+        offset = (page - 1) * limit
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+           if search:
+                cursor.execute(
+                    """
+                      SELECT fid, match_id, team_h, team_a, date
+                      FROM match_infos
+                      WHERE team_h LIKE %s OR team_a LIKE %s
+                      LIMIT %s OFFSET %s
+                     """, (f'%{search}%', f'%{search}%', limit, offset)
+                )
+           else:
+              cursor.execute("""
+                  SELECT fid, match_id, team_h, team_a, date FROM match_infos
+                  LIMIT %s OFFSET %s
+                """, (limit, offset))
+           matches = cursor.fetchall()
+        return jsonify(matches)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        connection.close()
+
 @app.route('/match_infos', methods=['POST'])
 def create_match_info():
     try:
