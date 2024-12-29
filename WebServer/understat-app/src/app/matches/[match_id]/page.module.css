@@ -1,11 +1,11 @@
 .container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-  background-color: #1a1a1a;
-    color: #ddd; /* Light gray text */
-  border-radius: 12px;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    background-color: #1a1a1a;
+      color: #ddd;
+    border-radius: 12px;
      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -17,20 +17,19 @@
 
 .header h1 {
     font-size: 2.5rem;
-    color: #fff; /* White for title */
+    color: #fff;
     margin-bottom: 8px;
 }
 
 .header h2 {
     font-size: 1.8rem;
-    color: #aaa; /* Subtle gray for subtitle */
+    color: #aaa;
     margin-top: 0;
-
 }
 
 .dateTime {
     font-size: 1.1rem;
-    color: #7dd3fc; /* Highlighted date color */
+    color: #7dd3fc;
 }
 
 .scoreSection {
@@ -39,7 +38,7 @@
     justify-content: center;
     margin: 30px 0;
     padding: 20px;
-    background: #222; /* Darker background */
+    background: #222;
     border-radius: 10px;
     border: 1px solid #333;
 }
@@ -61,11 +60,11 @@
     padding: 0 15px;
 }
 
-
 .separator {
     margin: 0 15px;
   color: #888;
 }
+
 
 .stats,
 .forecast {
@@ -79,7 +78,7 @@
 .stats h3,
 .forecast h3 {
     margin-bottom: 15px;
-    color: #96a1a4; /* Title color */
+    color: #96a1a4;
      border-bottom: 2px solid #333;
     padding-bottom: 10px;
 }
@@ -118,4 +117,38 @@
     text-align: center;
     font-size: 1.2rem;
     color: #777;
+}
+
+
+.shotsSection {
+    margin: 25px 0;
+    padding: 20px;
+     background: #222;
+    border: 1px solid #333;
+    border-radius: 10px;
+}
+
+.shotsSection h3 {
+      margin-bottom: 15px;
+    color: #96a1a4;
+     border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+.shotsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+.shotItem {
+  padding: 15px;
+  background: #333;
+  border-radius: 8px;
+  font-size: 0.9rem;
+    color: #ddd;
+}
+
+.shotItem p {
+    margin: 5px 0;
 }
