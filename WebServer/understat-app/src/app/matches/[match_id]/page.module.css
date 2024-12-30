@@ -126,3 +126,134 @@
     font-size: 1.2rem;
     color: #777;
 }
+
+.topbar{
+    display: flex;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.topbar span {
+ color:#7dd3fc;
+font-size: 1.2rem;
+cursor: pointer;
+  transition: color 0.2s;
+  padding: 5px;
+
+}
+
+.topbar span:hover {
+color:#56bbf8;
+  text-decoration: underline;
+}
+
+
+.shotDetails {
+  margin-top: 25px;
+    padding: 20px;
+   background: #222;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.shotDetails h3{
+  text-align: center;
+  margin-bottom: 15px;
+  color: #96a1a4;
+   border-bottom: 2px solid #333;
+  padding-bottom: 10px;
+}
+.shotItem {
+  margin-bottom: 10px;
+    padding: 10px;
+     background: #272727;
+  border: 1px solid #333;
+      border-radius: 10px;
+}
+
+.shotItem p{
+color: #ddd;
+font-size: 1rem;
+}
+
+
+
+.shotDetails{
+  margin: 25px 0;
+padding: 20px;
+background: #222;
+border: 1px solid #333;
+border-radius: 10px;
+}
+.shotDetails h3{
+    text-align: center;
+margin-bottom: 15px;
+color: #96a1a4;
+ border-bottom: 2px solid #333;
+padding-bottom: 10px;
+}
+
+.shotItem{
+  display: flex;
+  align-items:center;
+  gap: 10px;
+padding: 5px;
+background: rgba(255, 255, 255, 0.05);
+border-radius: 10px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+margin: 5px;
+}
+
+.shotDetails{
+  margin: 25px 0;
+padding: 20px;
+background: #222;
+border: 1px solid #333;
+border-radius: 10px;
+}
+.shotDetails h3{
+    text-align: center;
+margin-bottom: 15px;
+color: #96a1a4;
+ border-bottom: 2px solid #333;
+padding-bottom: 10px;
+}
+
+.shotItem{
+ padding: 10px; /* Added some padding around the entire shot item*/
+background: rgba(255, 255, 255, 0.05);
+border-radius: 10px; /* Added rounded corners to the shot item*/
+border: 1px solid rgba(255, 255, 255, 0.1); /* Added a subtle border*/
+margin: 8px 0; /* Added vertical margin for better spacing*/
+}
+
+.shotContent {
+display: flex;
+align-items: center;
+gap: 15px; /* Space between elements */
+font-size: 1rem; /* Adjust base font size for legibility */
+}
+.shotContent span {
+display: flex;
+}
+.playerName, .assist {
+font-weight: 500;
+}
+
+.assist a{
+  color: #7dd3fc;
+}
+
+.playerName a{
+  color: #fff;
+}
+
+.shotType, .shotSituation {
+font-size: 0.9rem;
+color: #aaa;
+white-space: nowrap; /* Prevent text from wrapping */
+overflow: hidden;      /* Hide overflowing text */
+text-overflow: ellipsis; /* Show ellipsis (...) for overflow */
+}

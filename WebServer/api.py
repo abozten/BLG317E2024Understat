@@ -485,6 +485,45 @@ def delete_shot(shot_id):
         if connection:
            connection.close()
 
+@app.route('/matches/<int:match_id>/shots', methods=['GET'])
+def get_match_shots(match_id):
+    try:
+      connection = get_db_connection()
+      with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT s.minute, s.result, s.situation, s.shotType, p.player_name, p.player_id, s.player_assisted, s.xG
+            FROM shots s
+            JOIN players p ON s.player_id = p.player_id
+            WHERE s.match_id = %s
+             ORDER BY s.minute
+        """, (match_id,))
+        shots = cursor.fetchall()
+      return jsonify(shots)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+       if connection:
+        connection.close()
+
+@app.route('/team/<team_name>/players', methods=['GET'])
+def get_team_players(team_name):
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT player_id, player_name
+                FROM players
+                WHERE team_title = %s
+                ORDER BY player_name
+            """, (team_name,))
+            players = cursor.fetchall()
+        return jsonify(players)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+      if connection:
+            connection.close()
+
 #ALİ
    #Match_Info
 @app.route('/match_infos', methods=['GET'])
