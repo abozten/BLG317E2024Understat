@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Players.module.css';
 import FilterModal2 from '../components/FilterModal2';
@@ -39,6 +40,27 @@ const PlayersPage = () => {
         'xGBuildup',
         'year'
     ];
+      const filterableColumns = {
+        'player_name': { type: 'text', label: 'Player Name' },
+        'games': { type: 'range', label: 'Games' },
+        'time': { type: 'range', label: 'Time' },
+        'goals': { type: 'range', label: 'Goals' },
+         'xG': { type: 'range', label: 'xG' },
+        'assists': { type: 'range', label: 'Assists' },
+         'xA': { type: 'range', label: 'xA' },
+         'shots': { type: 'range', label: 'Shots' },
+         'key_passes': { type: 'range', label: 'Key Passes' },
+        'yellow_cards': { type: 'range', label: 'Yellow Cards' },
+         'red_cards': { type: 'range', label: 'Red Cards' },
+        'position': { type: 'checkbox', label: 'Position', options: ['GK', 'DF', 'MF', 'FW'] },
+        'team_title': { type: 'checkbox', label: 'Team', },
+        'npg': { type: 'range', label: 'NPG' },
+        'npxG': { type: 'range', label: 'npxG' },
+        'xGChain': { type: 'range', label: 'xGChain' },
+        'xGBuildup': { type: 'range', label: 'xGBuildup' },
+        'year': { type: 'range', label: 'Year' },
+    };
+
     const displayColumns = columns.map((col) => col.replace(/_/g, ' ').toUpperCase())
     const [scrollTimeout, setScrollTimeout] = useState(null);
 
@@ -71,20 +93,24 @@ const PlayersPage = () => {
     const fetchPlayers = async (pageNum = 1, filters = {}) => {
         setLoading(true);
         try {
-            let url = `https://localhost:5001/players/search?page=${pageNum}&limit=${PLAYERS_PER_PAGE}`;
+            let url = `https://localhost:5001/filter?page=${pageNum}&limit=${PLAYERS_PER_PAGE}`;
 
-            for (const column of Object.keys(filters)) {
+             for (const column of Object.keys(filters)) {
                 if (column === 'team' && filters[column]?.length > 0) {
                     url += `&team=${filters[column].join(',')}`;
                 } else if (column === 'position' && filters[column]?.length > 0) {
                     url += `&position=${filters[column].join(',')}`;
-                } else if (filters[column] && column !== 'allTeams') { // Exclude allTeams from query params
-                    if (filters[column]?.min !== null)
-                        url += `&${column}_min=${filters[column].min}`;
-                    if (filters[column]?.max !== null)
+                 } else if (filters[column] && column !== 'allTeams') { // Exclude allTeams from query params
+                   if (filters[column]?.min !== null) {
+                       url += `&${column}_min=${filters[column].min}`;
+                     }
+                   if (filters[column]?.max !== null) {
                         url += `&${column}_max=${filters[column].max}`;
+                   }
                 }
             }
+
+          console.log("Generated URL:", url);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -140,9 +166,8 @@ const PlayersPage = () => {
             <TopBar />
             <div className={styles.header}>
                 <div className={styles.tableTitle}>Players</div>
-                <button onClick={handleFilterClick} className={styles.filterButton}>OPTIONS</button>
                 {showFilterModal && <FilterModal2
-                    columns={columns}
+                    filterableColumns={filterableColumns}
                     onClose={() => setShowFilterModal(false)}
                     onApply={handleApplyFilters}
                     initialFilters={filters}

@@ -1,128 +1,114 @@
-'use client';
+// FilterModal2.js
 import React, { useState, useEffect } from 'react';
 import styles from './FilterModal.module.css';
 
-const FilterModal2 = ({ columns, onClose, onApply, initialFilters }) => {
+const FilterModal2 = ({ filterableColumns, onClose, onApply, initialFilters }) => {
     const [filters, setFilters] = useState(initialFilters || {});
-    const [selectedTeams, setSelectedTeams] = useState(initialFilters?.team || []);
-    const [selectedPositions, setSelectedPositions] = useState(initialFilters?.position || []);
-
+    const [allTeams, setAllTeams] = useState([]);
     useEffect(() => {
-        setFilters(initialFilters || {});
-        setSelectedTeams(initialFilters?.team || []);
-        setSelectedPositions(initialFilters?.position || []);
-    }, [initialFilters]);
-
-    const handleInputChange = (column, type, value) => {
+      if(initialFilters && initialFilters.allTeams){
+           setAllTeams(initialFilters.allTeams);
+      }
+    },[initialFilters])
+    const handleChange = (column, value, type, option) => {
       setFilters(prevFilters => {
-          const updatedFilters = {...prevFilters};
-            if(!updatedFilters[column]){
-               updatedFilters[column] = {}
+        let updatedFilters = {...prevFilters};
+    
+        if (type === 'checkbox') {
+          if (!updatedFilters[column]) {
+            updatedFilters[column] = [];
+          }
+          if (value) {
+           if (updatedFilters[column].includes(option)) {
+             updatedFilters[column] = updatedFilters[column].filter(item => item !== option);
             }
-            updatedFilters[column][type] = value === '' ? null : (isNaN(Number(value)) ? value : Number(value));
-          return updatedFilters
-          })
+            else{
+              updatedFilters[column].push(option)
+            }
+          }
+        }
+       else if (type === 'range'){
+         if(!updatedFilters[column]){
+            updatedFilters[column] = {};
+         }
+         if (value !== '' ){
+               updatedFilters[column] = { ...updatedFilters[column], ...value };
+          }else {
+                delete updatedFilters[column];
+             }
+         }
+        else {
+            updatedFilters[column] = value;
+        }
+        return updatedFilters
+    });
     };
 
-
-    const handleTeamChange = (e) => {
-        const value = e.target.value;
-        setSelectedTeams(prevTeams =>
-            prevTeams.includes(value) ? prevTeams.filter(team => team !== value) : [...prevTeams, value]
-        );
+      const handleClear = () => {
+        setFilters({});
     };
-    const handlePositionChange = (e) => {
-        const value = e.target.value;
-         setSelectedPositions(prevPos =>
-            prevPos.includes(value) ? prevPos.filter(pos => pos !== value) : [...prevPos, value]
-        );
+  
+
+    const handleApply = () => {
+        onApply(filters);
     };
-
-    const clearFilters = () => {
-      setFilters({});
-      setSelectedTeams([]);
-      setSelectedPositions([]);
-    };
-
-
-    const availablePositions = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
-
 
     return (
-        <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-                <div className={styles.header}>
-                    <div className={styles.optionsText}>OPTIONS</div>
-                    <button className={styles.closeButton} onClick={onClose}>
-                        <span className={styles.closeIcon}>×</span>
-                    </button>
-                </div>
-                <div className={styles.content}>
-                 <div className={styles.filterRow}>
-                        <label className={styles.columnLabel}>Team</label>
-                        <div style={{ overflowY: 'auto', maxHeight: '200px', paddingRight: '10px' }}>
-                            {filters?.allTeams?.map(team => (
-                                <div key={team} className={styles.checkbox}>
-                                    <label>
+      <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+              <div className={styles.header}>
+                  <span className={styles.optionsText}>Filter Options</span>
+                  <button onClick={onClose} className={styles.closeButton}>
+                      <span className={styles.closeIcon}>✕</span>
+                  </button>
+              </div>
+              <div className={styles.content}>
+                  {Object.entries(filterableColumns).map(([column, { type, label, options }]) => (
+                    <div key={column}>
+                        {type === 'checkbox' && (
+                          <div className={styles.checkbox}>
+                              <label className={styles.columnLabel}>{label}</label>
+                               <div >
+                                  {(column === 'team_title' ? allTeams : options)?.map(option => (
+                                    <label key={`${column}-${option}`} className={styles.checkbox}> {/* Make key unique */}
                                         <input
                                             type="checkbox"
-                                            value={team}
-                                            checked={selectedTeams.includes(team)}
-                                            onChange={handleTeamChange}
+                                            checked={filters[column]?.includes(option)}
+                                            onChange={(e) => handleChange(column, e.target.checked, type, option)}
                                         />
-                                        {team}
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className={styles.filterRow}>
-                        <label className={styles.columnLabel}>Position</label>
-                        <div style={{ overflowY: 'auto', maxHeight: '150px', paddingRight: '10px' }}>
-                            {availablePositions.map(position => (
-                                <div key={position} className={styles.checkbox}>
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={position}
-                                            checked={selectedPositions.includes(position)}
-                                            onChange={handlePositionChange}
-                                        />
-                                        {position}
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {columns
-                        .filter(column => column !== "Team" && column !== "position" )
-                        .map(column => (
-                            <div key={column} className={styles.filterRow}>
-                                <label className={styles.columnLabel}>{column}</label>
-                                <div style={{ display: 'flex', gap: '5px' }}>
-                                    <input
-                                        type="text"
-                                        className={styles.inputField}
-                                        placeholder="min"
-                                        value={filters[column]?.min || ''}
-                                        onChange={(e) => handleInputChange(column, 'min', e.target.value)}
-                                    />
-                                    <input
-                                        type="text"
-                                        className={styles.inputField}
-                                        placeholder="max"
-                                        value={filters[column]?.max || ''}
-                                        onChange={(e) => handleInputChange(column, 'max', e.target.value)}
-                                    />
-                                </div>
+                                       {option}
+                                  </label>
+                                  ))}
+                              </div>
+                          </div>
+                         )}
+                       {type === 'range' && (
+                           <div className={styles.filterRow}>
+                                <span className={styles.columnLabel}>{label}</span>
+                               <input
+                                  type="number"
+                                  placeholder="Min"
+                                  className={styles.inputField}
+                                   value={filters[column]?.min || ''}
+                                   onChange={(e) => handleChange(column, { min: e.target.value === "" ? null: parseFloat(e.target.value) }, type)}
+                                />
+                                  <input
+                                      type="number"
+                                      placeholder="Max"
+                                      className={styles.inputField}
+                                     value={filters[column]?.max || ''}
+                                      onChange={(e) => handleChange(column, {max: e.target.value === "" ? null: parseFloat(e.target.value)}, type)}
+                                 />
                             </div>
-                        ))}
+                       )}
+                   </div>
+                   ))}
                 </div>
-                <div className={styles.footer}>
-                    <button className={styles.clearButton} onClick={clearFilters}>Clear filters</button>
-                    <button className={styles.applyButton} onClick={() => onApply({...filters, team: selectedTeams, position: selectedPositions})}>Apply</button>
-                </div>
-            </div>
+              <div className={styles.footer}>
+                <button onClick={handleClear} className={styles.clearButton}>Clear</button>
+                  <button onClick={handleApply} className={styles.applyButton}>Apply</button>
+              </div>
+          </div>
         </div>
     );
 };

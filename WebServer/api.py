@@ -690,7 +690,85 @@ def get_players():
         return jsonify({'error': str(e)}), 400
     finally:
         connection.close()
+@app.route('/filter', methods=['GET'])
+def filter_players():
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        offset = (page - 1) * limit
+        search = request.args.get('search', '')
+        team = request.args.get('team')
+        position = request.args.get('position')
+        goals_min = request.args.get('goals_min')
+        goals_max = request.args.get('goals_max')
+        xg_min = request.args.get('xg_min')
+        xg_max = request.args.get('xg_max')
+        assists_min = request.args.get('assists_min')
+        assists_max= request.args.get('assists_max')
 
+        connection = get_db_connection()
+        if not connection:
+            return jsonify({'error': 'Database connection failed'}), 500
+
+        with connection.cursor() as cursor:
+
+            query = """
+                SELECT season_player_id, player_id, player_name, games, time, goals, xG,
+                       assists, xA, shots, key_passes, yellow_cards, red_cards, position,
+                       team_title, npg, npxG, xGChain, xGBuildup, year
+                FROM players
+                WHERE player_name LIKE %s
+            """
+            conditions = []
+            params = [f'%{search}%']
+
+            if team:
+              teams = team.split(',')
+              placeholders = ', '.join(['%s'] * len(teams))
+              conditions.append(f"team_title IN ({placeholders})")
+              params.extend(teams)
+
+            if position:
+                positions = position.split(',')
+                placeholders = ', '.join(['%s'] * len(positions))
+                conditions.append(f"position IN ({placeholders})")
+                params.extend(positions)
+
+            if goals_min:
+               conditions.append("goals >= %s")
+               params.append(float(goals_min))
+            if goals_max:
+               conditions.append("goals <= %s")
+               params.append(float(goals_max))
+
+            if xg_min:
+                conditions.append("xG >= %s")
+                params.append(float(xg_min))
+            if xg_max:
+                 conditions.append("xG <= %s")
+                 params.append(float(xg_max))
+            if assists_min:
+               conditions.append("assists >= %s")
+               params.append(float(assists_min))
+            if assists_max:
+                conditions.append("assists <= %s")
+                params.append(float(assists_max))
+
+            if conditions:
+                query += " AND " + " AND ".join(conditions)
+            query += " LIMIT %s OFFSET %s"
+            params.append(limit)
+            params.append(offset)
+
+            cursor.execute(query,params)
+            players = cursor.fetchall()
+
+        return jsonify(players)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+    finally:
+        if connection:
+            connection.close()
         
 @app.route('/player/<id>', methods=['GET'])
 def get_player(id):
