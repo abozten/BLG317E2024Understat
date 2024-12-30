@@ -67,8 +67,8 @@ export default function MatchDetails({ params }) {
                 <h1>Match Details</h1>
                 <h2><strong>{matchInfo.league}</strong></h2>
                 <h2>
-                    {match.h_title} (<Link href={`/team/${match.h_title}`}>{match.h_short_title}</Link>) vs
-                    {match.a_title} (<Link href={`/team/${match.a_title}`}>{match.a_short_title}</Link>)
+                    {match.h_title} (<Link href={`/teams/${match.h_title}`}>{match.h_short_title}</Link>) vs
+                    {match.a_title} (<Link href={`/teams/${match.a_title}`}>{match.a_short_title}</Link>)
                 </h2>
                 <p className={styles.dateTime}>
                     <strong>Date & Time:</strong> {new Date(match.datetime).toLocaleString()}
@@ -87,7 +87,7 @@ export default function MatchDetails({ params }) {
                     <span>{match.goals_a}</span>
                 </div>
                 <div className={styles.team}>
-                    <Link href={`/team/${match.a_title}`}>
+                    <Link href={`/teams/${match.a_title}`}>
                         <span>{match.a_title}</span>
                     </Link>
                 </div>
@@ -216,9 +216,8 @@ export default function MatchDetails({ params }) {
                          {shot.player_assisted ?
                          <span className={styles.assist}>
                                 ➡️
-                            <Link href={`/players/${shot.player_assisted}`}>
                              {shot.player_assisted}
-                            </Link>
+                            
                         </span>
                            : null}
 
