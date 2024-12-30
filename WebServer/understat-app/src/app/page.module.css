@@ -148,3 +148,38 @@
   border-radius: 8px;
   margin: 1rem 0;
 }
+
+/* Styles for TopTeams Component */
+.topTeamsContainer {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.topTeamsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.topTeamsHeader, .topTeamsCell {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.topTeamsHeader {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+}
+.topTeamsRow:hover {
+background: rgba(255, 255, 255, 0.1);
+}
+
+.topTeamsLoading, .topTeamsError {
+text-align: center;
+ padding: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+}

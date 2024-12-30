@@ -340,17 +340,23 @@ def get_fut23_summary():
             connection.close()
 
 # Advanced query combining season and fut23 tables
-@app.route('/team-performance', methods=['GET'])#Deniz'den aldım.
+@app.route('/team-performance', methods=['GET'])
 def get_team_performance():
     try:
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT s.team_id, s.year, f.team_id, COUNT(*) AS total_matches,
-                       AVG(s.xG) AS avg_team_xG, AVG(f.Rating) AS avg_player_rating
+                SELECT
+                   t.team_name,
+                    s.team_id,
+                    s.year,
+                    COUNT(*) AS total_matches,
+                    AVG(s.xG) AS avg_team_xG,
+                    AVG(f.Rating) AS avg_player_rating
                 FROM season s
                 JOIN fut23 f ON s.team_id = f.team_id
+                JOIN teams t ON s.team_id = t.team_id
                 WHERE s.year = 2023
                 GROUP BY s.team_id, s.year, f.team_id
                 ORDER BY avg_team_xG DESC, avg_player_rating DESC
@@ -363,7 +369,7 @@ def get_team_performance():
     finally:
         if 'connection' in locals() and connection.open:
             connection.close()
-
+            
 # SHOTS CRUD OPERATIONS
 @app.route('/shots', methods=['GET'])
 def get_shots():
