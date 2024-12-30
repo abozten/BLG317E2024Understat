@@ -347,12 +347,12 @@ def get_team_performance():
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT s.team_id, s.year, f.Team, COUNT(*) AS total_matches,
+                SELECT s.team_id, s.year, f.team_id, COUNT(*) AS total_matches,
                        AVG(s.xG) AS avg_team_xG, AVG(f.Rating) AS avg_player_rating
                 FROM season s
-                JOIN fut23 f ON s.team_id = f.Team
+                JOIN fut23 f ON s.team_id = f.team_id
                 WHERE s.year = 2023
-                GROUP BY s.team_id, s.year, f.Team
+                GROUP BY s.team_id, s.year, f.team_id
                 ORDER BY avg_team_xG DESC, avg_player_rating DESC
                 """
             )
@@ -783,7 +783,7 @@ def get_player(id):
                 FROM players
                 WHERE player_id = %s
             """
-            # Attempt to convert to integer, if it's not a number, it will be treated as a string
+            # Attempt to convert to integer, if it' not a number, it will be treated as a string
             if isinstance(id, str) and id.isdigit():
                 cursor.execute(query, (int(id),))
             else:
