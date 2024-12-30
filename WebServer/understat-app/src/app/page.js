@@ -47,6 +47,7 @@ const TopTeams2023 = () => {
                        <th className={styles.topTeamsHeader}>Team</th>
                       <th className={styles.topTeamsHeader}>Avg Team xG</th>
                       <th className={styles.topTeamsHeader}>Avg Player Rating</th>
+                      <th className={styles.topTeamsHeader}>Total Matches</th>
                    </tr>
                </thead>
               <tbody>
@@ -60,9 +61,11 @@ const TopTeams2023 = () => {
                           <td className={styles.topTeamsCell}>
                               {typeof team.avg_team_xG === 'number' ? team.avg_team_xG.toFixed(2) : 'N/A'}
                           </td>
-                          <td className={styles.topTeamsCell}>
-                           {typeof team.avg_player_rating === 'number' ? team.avg_player_rating.toFixed(2) : 'N/A'}
-                          </td>
+                         <td className={styles.topTeamsCell}>
+                                {typeof team.avg_player_rating === 'string' ? parseFloat(team.avg_player_rating).toFixed(2) :
+                                  typeof team.avg_player_rating === 'number' ? team.avg_player_rating.toFixed(2) : 'N/A'}
+                           </td>
+                          <td className={styles.topTeamsCell}>{team.total_matches}</td>
                      </tr>
                  ))}
               </tbody>
