@@ -98,7 +98,7 @@ Follow these steps to get the project running on your local machine:
        python api.py
         ```
     *  Start the frontend in a new terminal
-       ```bash
+       ``bash
        cd client
        npm run dev  # or yarn dev
         ```
