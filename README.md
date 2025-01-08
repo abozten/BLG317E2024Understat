@@ -93,7 +93,7 @@ Follow these steps to get the project running on your local machine:
   
 5.  **Start the development servers:**
     *  Start the backend
-       ```bash
+       ``bash
        cd server
        python api.py
         ```
@@ -122,7 +122,7 @@ Contributions are welcome! To contribute:
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE) - see the `LICENSE` file for details.
+This project is licensed under the [ITU License](LICENSE) - see the `LICENSE` file for details.
 
 ---
 ## Contact
