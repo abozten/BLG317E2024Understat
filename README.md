@@ -82,7 +82,7 @@ Follow these steps to get the project running on your local machine:
     npm install  # or yarn install
     ```
 3.  **Set up the backend:**
-   ``bash
+    ```bash
     cd server
     pip install -r requirements.txt
     ```
@@ -122,7 +122,7 @@ Contributions are welcome! To contribute:
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE) - see the `LICENSE` file for details.
+This project is licensed under the [ITU License](LICENSE) - see the `LICENSE` file for details.
 
 ---
 ## Contact
