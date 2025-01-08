@@ -82,7 +82,7 @@ Follow these steps to get the project running on your local machine:
     npm install  # or yarn install
     ```
 3.  **Set up the backend:**
-   ``bash
+    ```bash
     cd server
     pip install -r requirements.txt
     ```
@@ -93,12 +93,12 @@ Follow these steps to get the project running on your local machine:
   
 5.  **Start the development servers:**
     *  Start the backend
-       ``bash
+       ```bash
        cd server
        python api.py
         ```
     *  Start the frontend in a new terminal
-       ``bash
+       ```bash
        cd client
        npm run dev  # or yarn dev
         ```
